@@ -1,6 +1,6 @@
 ﻿namespace ZenMvvm
 {
-    internal static class Settings
+    internal static class NamingConventions
     {
         const string DEFAULT_VM_NAMESPACE = "ViewModels";
         const string DEFAULT_V_NAMESPACE = "Views";

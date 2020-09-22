@@ -1,8 +1,8 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
 using Xamarin.Forms;
-using ZenMvvm.FluentApi;
 using ZenMvvm.Helpers;
 
 namespace ZenMvvm
@@ -107,17 +107,85 @@ namespace ZenMvvm
         private static Type GetViewModelTypeForPage(Type pageType)
         {
             var name = pageType.Name.ReplaceLastOccurrence(
-                            Settings.ViewSuffix, Settings.ViewModelSuffix);
+                            NamingConventions.ViewSuffix, NamingConventions.ViewModelSuffix);
 
             var viewAssemblyName = string.Format(CultureInfo.InvariantCulture
                 , "{0}.{1}, {2}"
-                , Settings.ViewModelNamespace ??
+                , NamingConventions.ViewModelNamespace ??
                     pageType.Namespace
-                    .Replace(Settings.ViewSubNamespace, Settings.ViewModelSubNamespace)
+                    .Replace(NamingConventions.ViewSubNamespace, NamingConventions.ViewModelSubNamespace)
                 , name
-                , Settings.ViewModelAssemblyName ?? pageType.GetTypeInfo().Assembly.FullName);
+                , NamingConventions.ViewModelAssemblyName ?? pageType.GetTypeInfo().Assembly.FullName);
 
             return Type.GetType(viewAssemblyName);
         }
     }
+
+    /// <summary>
+    /// Plumbing for Fluent Api
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public sealed class ConfigOptions
+    {
+        /// <summary>
+        /// Plumbing for Fluent Api
+        /// </summary>
+        public ConfigOptions SetViewSuffix(string suffix)
+        {
+            NamingConventions.ViewSuffix = suffix;
+            return this;
+        }
+
+        /// <summary>
+        /// Plumbing for Fluent Api
+        /// </summary>
+        public ConfigOptions SetViewModelSuffix(string suffix)
+        {
+            NamingConventions.ViewModelSuffix = suffix;
+            return this;
+        }
+
+        /// <summary>
+        /// Plumbing for Fluent Api
+        /// </summary>
+        public ConfigOptions SetViewAssemblyQualifiedNamespace<TAnyView>()
+        {
+            SetViewAssemblyQualifiedNamespace(
+                typeof(TAnyView).Namespace,
+                typeof(TAnyView).Assembly.FullName);
+            return this;
+        }
+
+        /// <summary>
+        /// Plumbing for Fluent Api
+        /// </summary>
+        public ConfigOptions SetViewAssemblyQualifiedNamespace(string namespaceName, string assemblyName)
+        {
+            NamingConventions.ViewAssemblyName = assemblyName;
+            NamingConventions.ViewNamespace = namespaceName;
+            return this;
+        }
+
+        /// <summary>
+        /// Plumbing for Fluent Api
+        /// </summary>
+        public ConfigOptions SetViewModelAssemblyQualifiedNamespace<TAnyViewModel>()
+        {
+            SetViewModelAssemblyQualifiedNamespace(
+                typeof(TAnyViewModel).Namespace,
+                typeof(TAnyViewModel).Assembly.FullName);
+            return this;
+        }
+
+        /// <summary>
+        /// Plumbing for Fluent Api
+        /// </summary>
+        public ConfigOptions SetViewModelAssemblyQualifiedNamespace(string namespaceName, string assemblyName)
+        {
+            NamingConventions.ViewModelAssemblyName = assemblyName;
+            NamingConventions.ViewModelNamespace = namespaceName;
+            return this;
+        }
+    }
+
 }
