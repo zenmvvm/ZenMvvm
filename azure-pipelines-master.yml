@@ -1,7 +1,7 @@
 # Build pipeline for Master Branch
 
 # This sets $(Build.BuildNumber)
-name: 1.4.$(Rev:r)
+name: 1.0.$(Rev:r)
 
 # Set project names here
 variables:
