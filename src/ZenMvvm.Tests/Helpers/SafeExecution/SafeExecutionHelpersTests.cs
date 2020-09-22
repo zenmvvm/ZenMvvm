@@ -46,13 +46,13 @@ namespace ZenMvvm.Tests
         #region Setup/TearDown
         private void BeforeEachTest()
         {
-            SafeExecutionHelpers.Initialize(false);
+            SafeExecutionHelpers.Configure(s => s.ShouldAlwaysRethrowException = false);
             SafeExecutionHelpers.RemoveDefaultExceptionHandler();
         }
 
         private void AfterEachTest()
         {
-            SafeExecutionHelpers.Initialize(false);
+            SafeExecutionHelpers.Configure(s => s.ShouldAlwaysRethrowException = false);
             SafeExecutionHelpers.RemoveDefaultExceptionHandler();
         }
         #endregion
@@ -246,7 +246,7 @@ namespace ZenMvvm.Tests
         [Fact]
         public void HandleException_Exception_ExceptionOnException_Handled()
         {
-            SafeExecutionHelpers.Initialize();
+            SafeExecutionHelpers.RevertToDefaultImplementation();
             SafeExecutionHelpers.RemoveDefaultExceptionHandler();
 
             var exception = new Exception();
@@ -259,7 +259,7 @@ namespace ZenMvvm.Tests
         [Fact]
         public void HandleException_SpecificException_SpecificExceptionOnException_Handled()
         {
-            SafeExecutionHelpers.Initialize();
+            SafeExecutionHelpers.RevertToDefaultImplementation();
             SafeExecutionHelpers.RemoveDefaultExceptionHandler();
 
             var exception = new SpecificException();
@@ -272,7 +272,7 @@ namespace ZenMvvm.Tests
         [Fact]
         public void HandleException_SpecificException_ExceptionOnException_Handled()
         {
-            SafeExecutionHelpers.Initialize();
+            SafeExecutionHelpers.RevertToDefaultImplementation();
             SafeExecutionHelpers.RemoveDefaultExceptionHandler();
 
 
@@ -287,7 +287,7 @@ namespace ZenMvvm.Tests
         [Fact]
         public void HandleException_Exception_SpecificExceptionOnException_NotHandled()
         {
-            SafeExecutionHelpers.Initialize();
+            SafeExecutionHelpers.RevertToDefaultImplementation();
             SafeExecutionHelpers.RemoveDefaultExceptionHandler();
 
             var exception = new Exception();
@@ -301,7 +301,7 @@ namespace ZenMvvm.Tests
         [Fact]
         public void HandleException_DefaultHandlerSet_Exception_ExceptionOnException_DefaultNotInvoked()
         {
-            SafeExecutionHelpers.Initialize();
+            SafeExecutionHelpers.RevertToDefaultImplementation();
             SafeExecutionHelpers.RemoveDefaultExceptionHandler();
 
             var defaultHandler = new Mock<Action<Exception>>();
@@ -316,7 +316,7 @@ namespace ZenMvvm.Tests
         [Fact]
         public void HandleException_DefaultHandlerSet_SpecificException_SpecificExceptionOnException_DefaultNotInvoked()
         {
-            SafeExecutionHelpers.Initialize();
+            SafeExecutionHelpers.RevertToDefaultImplementation();
             SafeExecutionHelpers.RemoveDefaultExceptionHandler();
 
             var defaultHandler = new Mock<Action<Exception>>();
@@ -332,7 +332,7 @@ namespace ZenMvvm.Tests
         [Fact]
         public void HandleException_DefaultHandlerSet_SpecificException_ExceptionOnException__DefaultNotInvoked()
         {
-            SafeExecutionHelpers.Initialize();
+            SafeExecutionHelpers.RevertToDefaultImplementation();
             SafeExecutionHelpers.RemoveDefaultExceptionHandler();
 
             var defaultHandler = new Mock<Action<Exception>>();
@@ -348,7 +348,7 @@ namespace ZenMvvm.Tests
         [Fact]
         public void HandleException_DefaultHandlerSet_Exception_SpecificExceptionOnException__DefaultInvoked()
         {
-            SafeExecutionHelpers.Initialize();
+            SafeExecutionHelpers.RevertToDefaultImplementation();
             SafeExecutionHelpers.RemoveDefaultExceptionHandler();
 
             var defaultHandler = new Mock<Action<Exception>>();
@@ -367,7 +367,7 @@ namespace ZenMvvm.Tests
         public void HandleException_ShouldRethrow_Throws()
         {
             Xamarin.Forms.Mocks.MockForms.Init(); //For Device.BeginInvokeOnMainThread
-            SafeExecutionHelpers.Initialize(shouldAlwaysRethrowException: true);
+            SafeExecutionHelpers.Configure(s => s.ShouldAlwaysRethrowException = true);
             SafeExecutionHelpers.RemoveDefaultExceptionHandler();
 
             var exception = new NullReferenceException();

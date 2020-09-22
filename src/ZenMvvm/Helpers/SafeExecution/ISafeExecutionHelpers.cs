@@ -1,17 +1,17 @@
 ﻿using System;
+using System.ComponentModel;
+
 namespace ZenMvvm.Helpers
 {
     /// <summary>
     /// Core functionality for the collection of &quot;Safe&quot; delgate invokations 
     /// </summary>
-    public interface ISafeExecutionHelpers
+    internal interface ISafeExecutionHelpers
     {
-        /// <summary>
-        /// The default action to execute when an exception is caught by
-        /// <see cref="SafeTaskExtensions"/>, <see cref="SafeActionExtensions"/>
-        /// , and <see cref="SafeCommand"/>
-        /// </summary>
-        Action<Exception> DefaultExceptionHandler { get; }
+        ISafeExecutionSettings Settings { get; set; }
+
+        //void RevertToDefaultImplementation();
+
         /// <summary>
         /// Initialize SafeExecutionHelpers without a <see cref="DefaultExceptionHandler"/>.
         ///
@@ -24,7 +24,7 @@ namespace ZenMvvm.Helpers
         /// Warning: When <c>true</c>, there is no way to catch this exception
         /// and it will always result in a crash. Recommended only for debugging purposes.
         /// </param>
-        void Initialize(bool shouldAlwaysRethrowException = false);
+        void Configure(ISafeExecutionSettings settings);
         /// <summary>
         /// Initialize SafeExecutionHelpers with a <see cref="DefaultExceptionHandler"/>
         /// </summary>
@@ -37,9 +37,7 @@ namespace ZenMvvm.Helpers
         /// when an exception is caught by
         /// <see cref="SafeTaskExtensions"/>, <see cref="SafeActionExtensions"/>
         /// , and <see cref="SafeCommand"/></param>
-        void Initialize(
-            Action<Exception> defaultOnException,
-            bool shouldAlwaysRethrowException = false);
+        void Configure(Action<ISafeExecutionSettings> configureSettings);
         /// <summary>
         /// Removes the <see cref="DefaultExceptionHandler"/>
         /// </summary>

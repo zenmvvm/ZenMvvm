@@ -248,10 +248,10 @@ namespace ZenMvvm.Tests
 		[Fact]
 		public void Execute_TargetThrows_HandlesException()
         {
-			SafeExecutionHelpers.Initialize();
+			SafeExecutionHelpers.RevertToDefaultImplementation();
 			SafeExecutionHelpers.RemoveDefaultExceptionHandler();
 			var mockHelpers = new Mock<ISafeExecutionHelpers>();
-			SafeExecutionHelpers.SetImplementation(mockHelpers.Object);
+			SafeExecutionHelpers.Implementation = mockHelpers.Object;
 
 			Exception exception = new Exception();
 
@@ -551,9 +551,9 @@ namespace ZenMvvm.Tests
 		[Fact]
 		public void Execute_SecondCallAfterException_Executes()
 		{
-			SafeExecutionHelpers.Initialize();
+			SafeExecutionHelpers.RevertToDefaultImplementation();
 			var mockHelpers = new Mock<ISafeExecutionHelpers>();
-			SafeExecutionHelpers.SetImplementation(mockHelpers.Object);
+			SafeExecutionHelpers.Implementation = mockHelpers.Object;
 
 			Exception exception = new Exception();
 
