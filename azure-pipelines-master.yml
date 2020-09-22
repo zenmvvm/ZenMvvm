@@ -1,0 +1,92 @@
+# Build pipeline for Master Branch
+
+# This sets $(Build.BuildNumber)
+name: 1.4.$(Rev:r)
+
+# Set project names here
+variables:
+  projectName: ZenMvvm.csproj
+  testProjectName: ZenMvvmTests.csproj
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+# Needed for when install reportgenerator and use it immediately
+- task: UseDotNet@2
+  displayName: 'Use .NET Core SDK 3.x'
+  inputs:
+    packageType: 'sdk'
+    version: '3.x'
+
+## - Build Project -
+# Implicit Restore is run before build
+- task: DotNetCoreCLI@2
+  displayName: 'Build Project'
+  inputs:
+    command: 'build'
+    projects: '**/$(projectName)'
+    arguments: '--configuration Release'
+
+## - Run Unit Tests -
+- task: DotNetCoreCLI@2
+  displayName: 'Build Test Project'
+  inputs:
+    command: 'build'
+    projects: '**/$(testProjectName)'
+    arguments: '--configuration Release'
+
+- task: DotNetCoreCLI@2
+  displayName: 'Run unit tests with code coverage'
+  inputs:
+    command: 'test'
+    projects: '**/$(testProjectName)'
+    arguments: '--no-build --configuration Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=$(Build.SourcesDirectory)/TestResults/Coverage/'
+    publishTestResults: true
+
+- script: |
+    dotnet tool install -g dotnet-reportgenerator-globaltool
+    reportgenerator -reports:$(Build.SourcesDirectory)/**/coverage.cobertura.xml -targetdir:$(Build.SourcesDirectory)/CodeCoverage -reporttypes:HtmlInline_AzurePipelines -reporttypes:Badges
+  displayName: 'Create code coverage report'
+
+- task: PublishCodeCoverageResults@1
+  displayName: 'Publish code coverage report'
+  inputs:
+    codeCoverageTool: 'cobertura'
+    summaryFileLocation: '$(Build.SourcesDirectory)/**/coverage.cobertura.xml'
+
+## - Pack -
+# Package with -pre version for /beta
+- task: DotNetCoreCLI@2
+  displayName: 'Pack -pre version'
+  inputs:
+    command: 'pack'
+    packagesToPack: '**/$(projectName)'
+    configuration: 'Release'
+    packDirectory: '$(Build.ArtifactStagingDirectory)/beta'
+    nobuild: true
+    versioningScheme: 'off'
+    buildProperties: 'PackageVersion=$(Build.BuildNumber)-pre'
+
+# Package public version off same build
+- task: DotNetCoreCLI@2
+  displayName: 'Pack public version'
+  inputs:
+    command: 'pack'
+    packagesToPack: '**/$(projectName)'
+    configuration: 'Release'
+    packDirectory: '$(Build.ArtifactStagingDirectory)/public'
+    nobuild: true
+    versioningScheme: 'off'
+    buildProperties: 'PackageVersion=$(Build.BuildNumber)'
+
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish artifacts'
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
