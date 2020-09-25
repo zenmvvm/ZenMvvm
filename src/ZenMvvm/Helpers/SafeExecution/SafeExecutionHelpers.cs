@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using Xamarin.Forms;
 
@@ -109,10 +111,20 @@ namespace ZenMvvm.Helpers
             if (exception is InvalidCommandParameterException)
                 throw exception; //internal exception from SafeCommand
 
+
+            // One of the following
             if (onException != null && exception is TException)
                 onException.Invoke(exception as TException);
+
+            else if (Settings.GenericExceptionHandlers.TryGet(exception.GetType(), out Action<Exception> genericHandler))
+                genericHandler.Invoke(exception);
+
+            else if (Settings.DefaultExceptionHandler != null)
+                Settings.DefaultExceptionHandler.Invoke(exception);
+
             else
-                Settings.DefaultExceptionHandler?.Invoke(exception);
+                Device.BeginInvokeOnMainThread(()=>throw new SafeExecutionHelpersException(exception));
+
 
             if (Settings.ShouldAlwaysRethrowException)
                 Device.BeginInvokeOnMainThread(() => throw exception);
@@ -140,6 +152,11 @@ namespace ZenMvvm.Helpers
         bool ShouldAlwaysRethrowException { get; set; }
 
         /// <summary>
+        /// A collection of default exception handlers for specific exception types
+        /// </summary>
+        ExceptionHandlerDictionary GenericExceptionHandlers { get; set; }
+
+        /// <summary>
         /// The fallback default exception handler.
         /// Commonly this will log the exception or write to console.
         /// </summary>
@@ -150,7 +167,7 @@ namespace ZenMvvm.Helpers
     public class SafeExecutionSettings : ISafeExecutionSettings
     {
         private static readonly Lazy<SafeExecutionSettings> defaultSettings =
-            new Lazy<SafeExecutionSettings>(()=> new SafeExecutionSettings());
+            new Lazy<SafeExecutionSettings>(() => new SafeExecutionSettings());
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SafeExecutionSettings"/> class.
@@ -170,6 +187,40 @@ namespace ZenMvvm.Helpers
 
         ///<inheritdoc/>
         public Action<Exception> DefaultExceptionHandler { get; set; }
+
+        ///<inheritdoc/>
+        public ExceptionHandlerDictionary GenericExceptionHandlers { get; set; } = new ExceptionHandlerDictionary();
     }
 
+    public class ExceptionHandlerDictionary
+    {
+        private readonly ConcurrentDictionary<Type, Action<Exception>> dictionary = new ConcurrentDictionary<Type, Action<Exception>>();
+
+        public void Add<T>(Action<T> action) where T : Exception
+            => dictionary.TryAdd(typeof(T), new Action<Exception>(o=>action((T)o)));
+
+        public void Remove<T>() where T : Exception
+            => dictionary.TryRemove(typeof(T), out _);
+
+        public bool TryGet<T>(Type exceptionType, out Action<T> handler) where T : Exception
+        {
+            if (dictionary.TryGetValue(exceptionType, out Action<Exception> value))
+            {
+                handler = value;
+                return true;
+            }
+            else
+            {
+                handler = null;
+                return false;
+            }
+        }
+    }
+
+    public class SafeExecutionHelpersException : Exception
+    {
+        public SafeExecutionHelpersException(Exception exception) : base($"Uncaught exception, '{exception.GetType().Name}'. Add the appropriate handler, or set a DefaultExceptionHandler to catch all unhandled exceptions ({nameof(SafeExecutionHelpers)}.{nameof(SafeExecutionHelpers.SetDefaultExceptionHandler)} method)",exception)
+        {
+        }
+    }
 }
