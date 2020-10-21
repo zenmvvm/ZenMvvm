@@ -5,7 +5,7 @@ namespace ZenMvvm
     /// <summary>
     /// Implements <see cref="OnViewNavigatedAsync(object)"/>
     /// </summary>
-    public interface IOnViewNavigated
+    public interface IOnViewNavigated<T>
     {
         /// <summary>
         /// Runs automatically when a <see cref="Xamarin.Forms.Page"/>
@@ -13,6 +13,6 @@ namespace ZenMvvm
         /// </summary>
         /// <param name="navigationData">Any data required for ViewModel initialisation</param>
         /// <returns></returns>
-        Task OnViewNavigatedAsync(object navigationData);
+        Task OnViewNavigatedAsync(T navigationData);
     }
 }

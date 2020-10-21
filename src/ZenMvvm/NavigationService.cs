@@ -80,7 +80,7 @@ namespace ZenMvvm
         /// <returns></returns>
         public Task GoToAsync(ShellNavigationState state, bool animate = true)
         {
-            return GoToAsync(state, null, animate);
+            return GoToAsync<object>(state, null, animate);
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace ZenMvvm
         /// <param name="navigationData"></param>
         /// <param name="animate"></param>
         /// <returns></returns>
-        public async Task GoToAsync(ShellNavigationState state, object navigationData, bool animate = true)
+        public async Task GoToAsync<T>(ShellNavigationState state, T navigationData, bool animate = true)
         {
             var isPushed = new TaskCompletionSource<bool>();
             Device.BeginInvokeOnMainThread(async () =>
@@ -110,11 +110,11 @@ namespace ZenMvvm
             {
                 var presentedViewModel = (Shell.Current?.CurrentItem?.CurrentItem as IShellSectionController)?
                 .PresentedPage.BindingContext;
-                if (presentedViewModel is IOnViewNavigated viewModel)
+                if (presentedViewModel is IOnViewNavigated<T> viewModel)
                     await viewModel.OnViewNavigatedAsync(navigationData).ConfigureAwait(false);
                 else
                     throw new ArgumentException($"You are trying to pass {nameof(navigationData)}" +
-                        $" to a ViewModel that doesn't implement {nameof(IOnViewNavigated)}");
+                        $" to a ViewModel that doesn't implement {nameof(IOnViewNavigated<T>)}");
             }
         }
 
@@ -134,11 +134,11 @@ namespace ZenMvvm
         /// <param name="navigationData">Object that will be recieved by the <see cref="IOnViewNavigated.OnViewNavigatedAsync(object)"/> method</param>
         /// <param name="animated"></param>
         /// <returns></returns>
-        public async Task<TViewModel> PushAsync<TViewModel>(
-            object navigationData, bool animated = true)
-            where TViewModel : class, IOnViewNavigated
+        public async Task<TViewModel> PushAsync<TViewModel,T>(
+            T navigationData, bool animated = true)
+            where TViewModel : class, IOnViewNavigated<T>
         {
-            var page = await InternalPushAsync<TViewModel>(navigationData, animated);
+            var page = await InternalPushAsync<TViewModel,T>(navigationData, animated);
             return page.BindingContext as TViewModel; //can be null if no viewModel resolved
         }
 
@@ -152,7 +152,7 @@ namespace ZenMvvm
             bool animated = true)
             where TViewModel : class
         {
-            var page = await InternalPushAsync<TViewModel>(null, animated);
+            var page = await InternalPushAsync<TViewModel,object>(null, animated);
             return page.BindingContext as TViewModel; //can be null if no viewModel resolved
         }
 
@@ -164,11 +164,11 @@ namespace ZenMvvm
         /// <param name="navigationData">Object that will be recieved by the <see cref="IOnViewNavigated.OnViewNavigatedAsync(object)"/> method</param>
         /// <param name="animated"></param>
         /// <returns></returns>
-        public async Task<TViewModel> PushModalAsync<TViewModel>(
-            object navigationData, bool animated = true)
-            where TViewModel : class, IOnViewNavigated
+        public async Task<TViewModel> PushModalAsync<TViewModel,T>(
+            T navigationData, bool animated = true)
+            where TViewModel : class, IOnViewNavigated<T>
         {
-            var page = await InternalPushAsync<TViewModel>(navigationData, animated, isModal: true);
+            var page = await InternalPushAsync<TViewModel,T>(navigationData, animated, isModal: true);
             return page.BindingContext as TViewModel;
         }
 
@@ -182,12 +182,12 @@ namespace ZenMvvm
             bool animated = true)
             where TViewModel : class
         {
-            var page = await InternalPushAsync<TViewModel>(null, animated, isModal: true);
+            var page = await InternalPushAsync<TViewModel, object>(null, animated, isModal: true);
             return page.BindingContext as TViewModel;
         }
 
-        private async Task<Page> InternalPushAsync<TViewModel>(
-            object navigationData,
+        private async Task<Page> InternalPushAsync<TViewModel,T>(
+            T navigationData,
             bool animated = true,
             bool isModal = false)
             where TViewModel : class
@@ -214,7 +214,7 @@ namespace ZenMvvm
             });
 
 
-            if (await isPushed.Task.ConfigureAwait(false) && page.BindingContext is IOnViewNavigated viewModel)
+            if (await isPushed.Task.ConfigureAwait(false) && page.BindingContext is IOnViewNavigated<T> viewModel)
                 await viewModel.OnViewNavigatedAsync(navigationData).ConfigureAwait(false);
 
             return page;

@@ -166,22 +166,22 @@ CancelCommand = new Command(async () =>
 OnItemSelectedCommand = new Command(async () =>
   {
     	//...
-      await navigationService.PushAsync<ItemDetailViewModel>(item);
+      await navigationService.PushAsync<ItemDetailViewModel, Item>(item);
   }
 ```
 
-The recieving ViewModel must implement `IOnViewNavigated` to accept the data:
+The recieving ViewModel must implement `IOnViewNavigated<T>` to accept the data:
 
 ```c#
-public class ItemDetailViewModel : IOnViewNavigated
+public class ItemDetailViewModel : IOnViewNavigated<Item>
 {
   	//...
   
-    public Task OnViewNavigatedAsync(object navigationData)
-    {
-        var item = navigationData as Item;
-        //...
-        return Task.CompletedTask;
+    public Task OnViewNavigatedAsync(Item item)
+    {        
+      //Do something with item
+      //...   
+      return Task.CompletedTask;
     }
 }
 ```
@@ -193,7 +193,7 @@ The following events are supported and implemented in the same way (buy implemen
 * `OnViewAppearing` is called when the bound view appears
 * `OnViewDisappearing` is called when the bound view disappears
 * `OnViewRemoved` is called when the bound view is popped from the `NavigationStack`
-* `ViewNavigated` (example above) is called when the bound view is pushed on the `NavigationStack`
+* `OnViewNavigated` (example above) is called when the bound view is pushed on the `NavigationStack`
 
 
 

@@ -44,7 +44,7 @@ namespace ZenMvvm.Tests
             var navigation = new Mock<INavigation>();
             navigation.Setup(o => o.PushAsync(It.IsAny<ImplementsBasePage>(), true)).Verifiable();
             var ns = new NavigationService(navigation.Object);
-            await ns.PushAsync<ImplementsBaseViewModel>(new object(),true);
+            await ns.PushAsync<ImplementsBaseViewModel, object>(new object(),true);
             navigation.VerifyAll();
         }
 
@@ -57,7 +57,7 @@ namespace ZenMvvm.Tests
             var navigation = new Mock<INavigation>();
             navigation.Setup(o => o.PushModalAsync(It.IsAny<ImplementsBasePage>(), true)).Verifiable();
             var ns = new NavigationService(navigation.Object);
-            await ns.PushModalAsync<ImplementsBaseViewModel>(new object(),true);
+            await ns.PushModalAsync<ImplementsBaseViewModel, object>(new object(),true);
             navigation.VerifyAll();
         }
 

@@ -49,7 +49,7 @@ namespace ZenMvvm
         /// <param name="navigationData"></param>
         /// <param name="animate"></param>
         /// <returns></returns>
-        Task GoToAsync(ShellNavigationState state, object navigationData, bool animate = true);
+        Task GoToAsync<T>(ShellNavigationState state, T navigationData, bool animate = true);
 
         /// <summary>
         /// Navigates to a <see cref="Page"/> passing data to the target ViewModel
@@ -85,7 +85,7 @@ namespace ZenMvvm
         /// <param name="navigationData">Object that will be recieved by the <see cref="IOnViewNavigated.OnViewNavigatedAsync(object)"/> method</param>
         /// <param name="animated"></param>
         /// <returns></returns>
-        Task<TViewModel> PushAsync<TViewModel>(object navigationData, bool animated = true) where TViewModel : class, IOnViewNavigated;
+        Task<TViewModel> PushAsync<TViewModel,T>(T navigationData, bool animated = true) where TViewModel : class, IOnViewNavigated<T>;
 
         /// <summary>
         /// Pushes a <see cref="Page"/> onto the <see cref="NavigationStack"/>
@@ -102,7 +102,7 @@ namespace ZenMvvm
         /// <param name="navigationData">Object that will be recieved by the <see cref="IOnViewNavigated.OnViewNavigatedAsync(object)"/> method</param>
         /// <param name="animated"></param>
         /// <returns></returns>
-        Task<TViewModel> PushModalAsync<TViewModel>(object navigationData, bool animated = true) where TViewModel : class, IOnViewNavigated;
+        Task<TViewModel> PushModalAsync<TViewModel,T>(T navigationData, bool animated = true) where TViewModel : class, IOnViewNavigated<T>;
 
         /// <summary>
         /// Pushes a <see cref="Page"/> onto the <see cref="ModalStack"/>
