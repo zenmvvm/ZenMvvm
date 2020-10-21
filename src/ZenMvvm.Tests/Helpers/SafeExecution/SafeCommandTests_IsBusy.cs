@@ -12,12 +12,12 @@ namespace ZenMvvm.Tests
     public class TestOverloads
     {
         public TestOverloads(Action action) {}
-        public TestOverloads(Action action, IViewModelBase viewModel) : this(action) { }
-        public TestOverloads(Action action, IViewModelBase viewModel, Action<Exception> onException) : this(action,viewModel) { }
+        public TestOverloads(Action action, IBusy viewModel) : this(action) { }
+        public TestOverloads(Action action, IBusy viewModel, Action<Exception> onException) : this(action,viewModel) { }
 
         public TestOverloads(Func<Task> func) { }
-        public TestOverloads(Func<Task> func, IViewModelBase viewModel) : this(func) { }
-        public TestOverloads(Func<Task> func, IViewModelBase viewModel, Action<Exception> onException) : this(func, viewModel) { }
+        public TestOverloads(Func<Task> func, IBusy viewModel) : this(func) { }
+        public TestOverloads(Func<Task> func, IBusy viewModel, Action<Exception> onException) : this(func, viewModel) { }
 
     }
 
@@ -26,7 +26,7 @@ namespace ZenMvvm.Tests
     {
         const int DELAY = 50;
         [Fact]
-        public void Execute_WithIViewModelBase_IsBusyTrueWhileRunning()
+        public void Execute_WithIBusy_IsBusyTrueWhileRunning()
         {
             var vm = new MockViewModel();
 
@@ -39,7 +39,7 @@ namespace ZenMvvm.Tests
         }
 
         [Fact]
-        public void ExecuteAsync_WithIViewModelBase_IsBusyTrueWhileRunning()
+        public void ExecuteAsync_WithIBusy_IsBusyTrueWhileRunning()
         {
             bool isExecuting = true;
 
@@ -60,7 +60,7 @@ namespace ZenMvvm.Tests
 
         [Theory]
         [InlineData(7)]
-        public void ExecuteT_WithIViewModelBase_IsBusyTrueWhileRunning(int number)
+        public void ExecuteT_WithIBusy_IsBusyTrueWhileRunning(int number)
         {
             var vm = new MockViewModel();
 
@@ -74,7 +74,7 @@ namespace ZenMvvm.Tests
 
         [Theory]
         [InlineData(7)]
-        public void ExecuteAsyncT_WithIViewModelBase_IsBusyTrueWhileRunning(int number)
+        public void ExecuteAsyncT_WithIBusy_IsBusyTrueWhileRunning(int number)
         {
             bool isExecuting = true;
 

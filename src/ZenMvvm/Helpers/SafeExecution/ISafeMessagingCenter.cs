@@ -52,13 +52,13 @@ namespace ZenMvvm.Helpers
         /// If specified, callback will only execute if the sender is from the
         /// specified source. If not, callback will execute if the sender's type is equal to <typeparamref name="TSender"/></param>
         /// <param name="isBlocking">Will block execution of the callback if the callback is already busy executing.</param>
-        /// <param name="viewModel">Will update <see cref="IViewModelBase"/>'s <c>IsBusy</c></param>
+        /// <param name="viewModel">Will update <see cref="IBusy"/>'s <c>IsBusy</c></param>
         /// property.
 		void Subscribe<TSender, TArgs>(
 			object subscriber,
 			string message,
 			Action<TSender,TArgs> callback,
-			IViewModelBase viewModel = null,
+			IBusy viewModel = null,
 			Action<Exception> onException = null,
 			TSender source = null,
 			bool isBlocking = true) where TSender : class;
@@ -76,13 +76,13 @@ namespace ZenMvvm.Helpers
 		/// If specified, callback will only execute if the sender is from the
 		/// specified source. If not, callback will execute if the sender's type is equal to <typeparamref name="TSender"/></param>
 		/// <param name="isBlocking">Will block execution of the callback if the callback is already busy executing.</param>
-		/// <param name="viewModel">Will update <see cref="IViewModelBase"/>'s <c>IsBusy</c></param>
+		/// <param name="viewModel">Will update <see cref="IBusy"/>'s <c>IsBusy</c></param>
 		/// property.
 		void Subscribe<TSender>(
 			object subscriber,
 			string message,
 			Action<TSender> callback,
-			IViewModelBase viewModel = null,
+			IBusy viewModel = null,
 			Action<Exception> onException = null,
 			TSender source = null,
 			bool isBlocking = true) where TSender : class;
@@ -96,13 +96,13 @@ namespace ZenMvvm.Helpers
 		/// <param name="callback">Callback to execute</param>
 		/// <param name="onException">Callback to execute if Exception is caught</param>
 		/// <param name="isBlocking">Will block execution of the callback if the callback is already busy executing.</param>
-		/// <param name="viewModel">Will update <see cref="IViewModelBase"/>&apos;s <c>IsBusy</c></param>
+		/// <param name="viewModel">Will update <see cref="IBusy"/>&apos;s <c>IsBusy</c></param>
 		/// property.
 		void SubscribeAny<TArgs>(
 			object subscriber,
 			string message,
 			Action<object, TArgs> callback,
-			IViewModelBase viewModel = null,
+			IBusy viewModel = null,
 			Action<Exception> onException = null,
 			bool isBlocking = true);
 
@@ -114,13 +114,13 @@ namespace ZenMvvm.Helpers
 		/// <param name="callback">Callback to execute</param>
 		/// <param name="onException">Callback to execute if Exception is caught</param>
 		/// <param name="isBlocking">Will block execution of the callback if the callback is already busy executing.</param>
-		/// <param name="viewModel">Will update <see cref="IViewModelBase"/>'s <c>IsBusy</c></param>
+		/// <param name="viewModel">Will update <see cref="IBusy"/>'s <c>IsBusy</c></param>
 		/// property.
 		void SubscribeAny(
 			object subscriber,
 			string message,
 			Action<object> callback,
-			IViewModelBase viewModel = null,
+			IBusy viewModel = null,
 			Action<Exception> onException = null,
 			bool isBlocking = true);
 
@@ -140,13 +140,13 @@ namespace ZenMvvm.Helpers
 		/// If specified, callback will only execute if the sender is from the
 		/// specified source. If not, callback will execute if the sender's type is equal to <typeparamref name="TSender"/></param>
 		/// <param name="isBlocking">Will block execution of the callback if the callback is already busy executing.</param>
-		/// <param name="viewModel">Will update <see cref="IViewModelBase"/>'s <c>IsBusy</c></param>
+		/// <param name="viewModel">Will update <see cref="IBusy"/>'s <c>IsBusy</c></param>
 		/// property.
 		void Subscribe<TSender, TArgs>(
 			object subscriber,
 			string message,
 			Func<TSender, TArgs, Task> asyncCallback,
-			IViewModelBase viewModel = null,
+			IBusy viewModel = null,
 			Action<Exception> onException = null,
 			TSender source = null,
 			bool isBlocking = true) where TSender : class;
@@ -164,13 +164,13 @@ namespace ZenMvvm.Helpers
 		/// If specified, callback will only execute if the sender is from the
 		/// specified source. If not, callback will execute if the sender's type is equal to <typeparamref name="TSender"/></param>
 		/// <param name="isBlocking">Will block execution of the callback if the callback is already busy executing.</param>
-		/// <param name="viewModel">Will update <see cref="IViewModelBase"/>'s <c>IsBusy</c></param>
+		/// <param name="viewModel">Will update <see cref="IBusy"/>'s <c>IsBusy</c></param>
 		/// property.
 		void Subscribe<TSender>(
 			object subscriber,
 			string message,
 			Func<TSender, Task> asyncCallback,
-			IViewModelBase viewModel = null,
+			IBusy viewModel = null,
 			Action<Exception> onException = null,
 			TSender source = null,
 			bool isBlocking = true) where TSender : class;
@@ -184,13 +184,13 @@ namespace ZenMvvm.Helpers
 		/// <param name="asyncCallback">Callback to execute</param>
 		/// <param name="onException">Callback to execute if Exception is caught</param>
 		/// <param name="isBlocking">Will block execution of the callback if the callback is already busy executing.</param>
-		/// <param name="viewModel">Will update <see cref="IViewModelBase"/>'s <c>IsBusy</c></param>
+		/// <param name="viewModel">Will update <see cref="IBusy"/>'s <c>IsBusy</c></param>
 		/// property.
 		void SubscribeAny<TArgs>(
 			object subscriber,
 			string message,
 			Func<object, TArgs, Task> asyncCallback,
-			IViewModelBase viewModel = null,
+			IBusy viewModel = null,
 			Action<Exception> onException = null,
 			bool isBlocking = true);
 
@@ -202,13 +202,13 @@ namespace ZenMvvm.Helpers
 		/// <param name="asyncCallback">Callback to execute</param>
 		/// <param name="onException">Callback to execute if Exception is caught</param>
 		/// <param name="isBlocking">Will block execution of the callback if the callback is already busy executing.</param>
-		/// <param name="viewModel">Will update <see cref="IViewModelBase"/>'s <c>IsBusy</c></param>
+		/// <param name="viewModel">Will update <see cref="IBusy"/>'s <c>IsBusy</c></param>
 		/// property.
 		void SubscribeAny(
 			object subscriber,
 			string message,
 			Func<object, Task> asyncCallback,
-			IViewModelBase viewModel = null,
+			IBusy viewModel = null,
 			Action<Exception> onException = null,
 			bool isBlocking = true);
 
