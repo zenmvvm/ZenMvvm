@@ -36,7 +36,7 @@ namespace ZenMvvm
         /// Tells the <see cref="ViewModelLocator"/> to attach the corresponding ViewModel
         /// </summary>
         public static readonly BindableProperty AutoWireViewModelProperty =
-            BindableProperty.CreateAttached("AutoWireViewModel", typeof(bool), typeof(ViewModelLocator), default(bool)
+            BindableProperty.CreateAttached("AutoWireViewModel", typeof(bool), typeof(ViewModelLocator), true
                 , propertyChanged: OnAutoWireViewModelChanged);
 
         /// <summary>
