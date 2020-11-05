@@ -28,7 +28,9 @@ namespace ZenMvvm
         /// </summary>
         public Shell CurrentShell => Shell.Current;
 
-        readonly INavigation navigation;
+        //todo be more elegant
+        INavigation navigation;
+        INavigation Navigation => navigation ?? CurrentShell.Navigation;
 
         /// <summary>
         /// Default Constructor
@@ -36,7 +38,7 @@ namespace ZenMvvm
         [ResolveUsing]
         public NavigationService()
         {
-            navigation = Shell.Current.Navigation;
+            //navigation = Shell.Current.Navigation;
         }
 
         /// <summary>
@@ -51,11 +53,11 @@ namespace ZenMvvm
         /// <summary>
         /// Gets the Current Shell's NavigationStack
         /// </summary>
-        public IReadOnlyList<Page> NavigationStack => navigation.NavigationStack;
+        public IReadOnlyList<Page> NavigationStack => Navigation.NavigationStack;
         /// <summary>
         /// Gets the Current Shell's ModalStack
         /// </summary>
-        public IReadOnlyList<Page> ModalStack => navigation.ModalStack;
+        public IReadOnlyList<Page> ModalStack => Navigation.ModalStack;
 
         #region Avoid dependancy on Xamarin.Forms
         /// <summary>
@@ -110,11 +112,16 @@ namespace ZenMvvm
             {
                 var presentedViewModel = (Shell.Current?.CurrentItem?.CurrentItem as IShellSectionController)?
                 .PresentedPage.BindingContext;
+
                 if (presentedViewModel is IOnViewNavigated<T> viewModel)
                     await viewModel.OnViewNavigatedAsync(navigationData).ConfigureAwait(false);
                 else
-                    throw new ArgumentException($"You are trying to pass {nameof(navigationData)}" +
-                        $" to a ViewModel that doesn't implement {nameof(IOnViewNavigated<T>)}");
+                {
+                    if(navigationData !=null)
+                        throw new ArgumentException($"You are trying to pass {nameof(navigationData)}" +
+        $" to a ViewModel that doesn't implement {nameof(IOnViewNavigated<T>)}");
+
+                }
             }
         }
 
@@ -134,11 +141,11 @@ namespace ZenMvvm
         /// <param name="navigationData">Object that will be recieved by the <see cref="IOnViewNavigated.OnViewNavigatedAsync(object)"/> method</param>
         /// <param name="animated"></param>
         /// <returns></returns>
-        public async Task<TViewModel> PushAsync<TViewModel,T>(
+        public async Task<TViewModel> PushAsync<TViewModel, T>(
             T navigationData, bool animated = true)
             where TViewModel : class, IOnViewNavigated<T>
         {
-            var page = await InternalPushAsync<TViewModel,T>(navigationData, animated);
+            var page = await InternalPushAsync<TViewModel, T>(navigationData, animated);
             return page.BindingContext as TViewModel; //can be null if no viewModel resolved
         }
 
@@ -152,7 +159,7 @@ namespace ZenMvvm
             bool animated = true)
             where TViewModel : class
         {
-            var page = await InternalPushAsync<TViewModel,object>(null, animated);
+            var page = await InternalPushAsync<TViewModel, object>(null, animated);
             return page.BindingContext as TViewModel; //can be null if no viewModel resolved
         }
 
@@ -164,11 +171,11 @@ namespace ZenMvvm
         /// <param name="navigationData">Object that will be recieved by the <see cref="IOnViewNavigated.OnViewNavigatedAsync(object)"/> method</param>
         /// <param name="animated"></param>
         /// <returns></returns>
-        public async Task<TViewModel> PushModalAsync<TViewModel,T>(
+        public async Task<TViewModel> PushModalAsync<TViewModel, T>(
             T navigationData, bool animated = true)
             where TViewModel : class, IOnViewNavigated<T>
         {
-            var page = await InternalPushAsync<TViewModel,T>(navigationData, animated, isModal: true);
+            var page = await InternalPushAsync<TViewModel, T>(navigationData, animated, isModal: true);
             return page.BindingContext as TViewModel;
         }
 
@@ -186,7 +193,7 @@ namespace ZenMvvm
             return page.BindingContext as TViewModel;
         }
 
-        private async Task<Page> InternalPushAsync<TViewModel,T>(
+        private async Task<Page> InternalPushAsync<TViewModel, T>(
             T navigationData,
             bool animated = true,
             bool isModal = false)
@@ -201,10 +208,10 @@ namespace ZenMvvm
                 try
                 {
                     if (isModal)
-                        await navigation.PushModalAsync(
+                        await Navigation.PushModalAsync(
                             page, animated).ConfigureAwait(false);
                     else
-                        await navigation.PushAsync(page, animated).ConfigureAwait(false);
+                        await Navigation.PushAsync(page, animated).ConfigureAwait(false);
                     isPushed.SetResult(true);
                 }
                 catch (Exception ex)
@@ -264,7 +271,7 @@ namespace ZenMvvm
                 {
                     try
                     {
-                        navigation.RemovePage(
+                        Navigation.RemovePage(
                                 NavigationStack.GetPreviousPage());
                         isRemoved.SetResult(true);
                     }
@@ -297,7 +304,7 @@ namespace ZenMvvm
                     {
                         try
                         {
-                            navigation.RemovePage(item);
+                            Navigation.RemovePage(item);
                             isRemoved.SetResult(true);
                         }
                         catch (Exception ex)
@@ -329,7 +336,7 @@ namespace ZenMvvm
             {
                 try
                 {
-                    await navigation.PopAsync(animated).ConfigureAwait(false);
+                    await Navigation.PopAsync(animated).ConfigureAwait(false);
                     isPopped.SetResult(true);
                 }
                 catch (Exception ex)
@@ -350,7 +357,7 @@ namespace ZenMvvm
         /// <returns></returns>
         public async Task PopToRootAsync(bool animated = true)
         {
-            for (int i = navigation.NavigationStack.Count - 1; i > 0; i--)
+            for (int i = Navigation.NavigationStack.Count - 1; i > 0; i--)
             {
                 await PopAsync(animated).ConfigureAwait(false);
             }
@@ -373,7 +380,7 @@ namespace ZenMvvm
             {
                 try
                 {
-                    await navigation.PopModalAsync(animated);
+                    await Navigation.PopModalAsync(animated);
                     isPopped.SetResult(true);
                 }
                 catch (Exception ex)
