@@ -34,8 +34,8 @@ ZenMvvm is built with ViewModel Unit Testing in mind. Your ViewModels won't depe
 **Features:**
 
 * Embraces Xamarin.Forms Shell applications
-* Uses familiar syntax, e.g. `PushAsync<TViewModel>()` is similar to Xamarin's `PushAsync(Page page)`
-* Effortlessly pass data to the pushed view-model with `PushAsync<TViewModel>(object navigationData)`
+* Uses familiar syntax, e.g. `PushAsync<TViewModel>()` is similar to Xamarin's `PushAsync(Page page)`. You can also navigate with `GotoAsync`.
+* Effortlessly pass data to the pushed view-model with `PushAsync<TViewModel>(object navigationData)` and `GotoAsync(route, navigationData)`
 * Navigation events can be handled in the ViewModel with `OnViewAppearing`, `OnViewDisappearing`, `OnViewNavigated`, and `OnViewRemoved` methods.
 * Provides fast built-in dependency injection. Alternatively, the user can elect to run ZenMvvm with their own DI engine of choice (e.g. Autofac or LightInject).
 * SafeExecution Helpers reduce boilerplate code and ensure no unhandled exceptions break your app, while enhancing performance by ensuring non-UI tasks are always run on background threads.
@@ -44,13 +44,18 @@ ZenMvvm is built with ViewModel Unit Testing in mind. Your ViewModels won't depe
 
 ## Mvvm Quickstart
 
-The easiest way to get familiar with ZenMvvm is to checkout ZenMvvmSampleApp, which is simply a refactored version of Xamarin's "Shell Forms App" template. This section references code from that app.
+The easiest way to get familiar with ZenMvvm is to checkout:
+
+* [ZenMvvm Sample App](https://github.com/z33bs/ZenMvvm-Sample-App), which is simply a refactored version of Xamarin's "Shell Forms App" template, and
+* [Zenimals](https://github.com/z33bs/Zenimals), which is a refactored version of Xamarin's Xaminals Sample App.
+
+This QuickStart references code from the above apps.
 
 
 
 ### Decide on your naming conventions
 
-ZenMvvm works by assuming that you name your View and ViewModel classes <u>consistently</u>. You can change the expected naming convention to your personal style with the `ViewModelLocator.Configure()` method.
+For convenience, ZenMvvm works by assuming that you name your View and ViewModel classes <u>consistently</u>. You can change the expected naming convention to suit your personal style with the `ViewModelLocator.Configure()` method. You can also break the convention [if needed](#Tell-Pages-to-Wire-their-respective-ViewModels).
 
 The default expectations are:
 
@@ -95,7 +100,9 @@ Here's an example of the Sample's  `AppShell.xaml`:
 
 
 
-### Tell Pages to AutoWire their respective ViewModels
+### Tell Pages to Wire their respective ViewModels
+
+If you follow the naming conventions, simple use `AutoWireViewModel` in the xaml of your view.
 
 ```xaml
 <?xml version="1.0" encoding="utf-8"?>
@@ -108,6 +115,23 @@ Here's an example of the Sample's  `AppShell.xaml`:
   
 </ContentPage>
 
+
+```
+
+If you want to bind a ViewModel that doesn't follow the naming conventions, use `WireSpecificViewModel`. If you just type the ViewModel's name, it will assume that the ViewModel is located in the default ViewModel namespace. If you specify an assembly qualified name, you can reference a ViewModel in any namespace.
+
+
+
+```xaml
+<?xml version="1.0" encoding="utf-8"?>
+<ContentPage
+	...
+  xmlns:mvvm="clr-namespace:ZenMvvm;assembly=ZenMvvm"
+  mvvm:ViewModelLocator.WireSpecificViewModel="SpecificViewModel">
+  
+  <!-- Xaml for Page -->
+  
+</ContentPage>
 
 ```
 
@@ -146,7 +170,15 @@ AddItemCommand = new Command(async () =>
   }
 ```
 
+**Navigate using routes:**
 
+```c#
+AddItemCommand = new Command(async () =>
+  {
+    	//...
+      await navigationService.GoToAsync($"details");
+  }
+```
 
 **Pop a page off the stack:**
 
@@ -167,6 +199,8 @@ OnItemSelectedCommand = new Command(async () =>
   {
     	//...
       await navigationService.PushAsync<ItemDetailViewModel, Item>(item);
+    	//..OR
+    	await navigationService.GotoAsync<Item>($"details", item);
   }
 ```
 
