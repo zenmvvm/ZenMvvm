@@ -46,8 +46,8 @@ ZenMvvm is built with ViewModel Unit Testing in mind. Your ViewModels won't depe
 
 The easiest way to get familiar with ZenMvvm is to checkout:
 
-* [ZenMvvm Sample App](https://github.com/z33bs/ZenMvvm-Sample-App), which is simply a refactored version of Xamarin's "Shell Forms App" template, and
-* [Zenimals](https://github.com/z33bs/Zenimals), which is a refactored version of Xamarin's Xaminals Sample App.
+* [ZenMvvm Sample App](https://github.com/z33bs/ZenMvvm-Sample-App#readme), which is simply a refactored version of Xamarin's "Shell Forms App" template, and
+* [Zenimals](https://github.com/z33bs/Zenimals-Sample-App#readme), which is a refactored version of Xamarin's Xaminals Sample App.
 
 This QuickStart references code from the above apps.
 
@@ -233,7 +233,7 @@ The following events are supported and implemented in the same way (buy implemen
 
 ## Dependency Injection QuickStart
 
-ZenMvvm's uses a fast, powerful built-in dependency injection engine. The engine is so good that it's been unbundled into a standalone package, [SmartDi](https://github.com/z33bs/SmartDi). Refer to it's [Readme](https://github.com/z33bs/SmartDi), and [Wiki](https://github.com/z33bs/SmartDi/wiki) for detailed documentation.
+ZenMvvm's uses a fast, powerful built-in dependency injection engine. The engine is so good that it's been unbundled into a standalone package, [SmartDi](https://github.com/z33bs/SmartDi). Refer to it's [Readme](https://github.com/z33bs/SmartDi#readme), and [Wiki](https://github.com/z33bs/SmartDi/wiki) for detailed documentation.
 
 The DI is user friendly, allowing you to resolve dependencies without registering them (see [SmartResolve](https://github.com/z33bs/SmartDi/wiki/Resolution#smart-resolve)). This is great for rapid-prototyping and simple applications. 
 
