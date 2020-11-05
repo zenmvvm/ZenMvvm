@@ -13,22 +13,22 @@ namespace ZenMvvm
     public static class ViewModelLocator
     {
         #region UnitTesting Helper
-        static readonly IIoc defaultContainerImplementation = new SmartDi2IIocAdapter();
+        private static IIoc DefaultContainer() => new SmartDi2IIocAdapter();
         /// <summary>
         /// Overrides <see cref="Ioc"/> with the chosen <see cref="IIoc"/>
         /// </summary>
-        public static IIoc ContainerImplementation { private get; set; } = defaultContainerImplementation;
+        internal static IIoc ContainerImplementation { private get; set; } = DefaultContainer();
 
         /// <summary>
         /// Dependency injection container
         /// </summary>
-        static IIoc Ioc => ContainerImplementation;
+        private static IIoc Ioc => ContainerImplementation;
 
         /// <summary>
         /// Revert to default IIoc
         /// </summary>
-        internal static void SetDefaultContainerImplementation()
-            => ContainerImplementation = defaultContainerImplementation;
+        internal static void ResetContainerImplementationToDefault()
+            => ContainerImplementation = DefaultContainer();
         #endregion
 
         /// <summary>
@@ -39,7 +39,8 @@ namespace ZenMvvm
         {
             return new ConfigOptions();
         }
-        #region AutoWireViewModel
+
+#region AutoWireViewModel
         /// <summary>
         /// Tells the <see cref="ViewModelLocator"/> to attach the corresponding ViewModel
         /// </summary>
@@ -77,9 +78,9 @@ namespace ZenMvvm
                 WireViewModel(view);
         }
 
-        #endregion
+#endregion
 
-        #region WireSpecificViewModel
+#region WireSpecificViewModel
         /// <summary>
         /// Tells the <see cref="ViewModelLocator"/> to attach the ViewModel type specified by the given name.
         /// Provide either the ViewModel's simple type name (in which case
@@ -115,7 +116,7 @@ namespace ZenMvvm
         public static void AutoWireViewModel(Page view, string viewModelName)
             => SetWireSpecificViewModel(view, viewModelName);
 
-        #endregion
+#endregion
 
         /// <summary>
         /// PropertyChanged delegate that Wires ViewModel to the View
@@ -186,7 +187,6 @@ namespace ZenMvvm
         }
     }
 
-    //todo hide with internal?
     /// <summary>
     /// Plumbing for Fluent Api
     /// </summary>
@@ -194,7 +194,7 @@ namespace ZenMvvm
     public sealed class ConfigOptions
     {
         /// <summary>
-        /// Plumbing for Fluent Api
+        /// Set Naming Convention
         /// </summary>
         public ConfigOptions SetViewSuffix(string suffix)
         {
@@ -203,7 +203,7 @@ namespace ZenMvvm
         }
 
         /// <summary>
-        /// Plumbing for Fluent Api
+        /// Set Naming Convention
         /// </summary>
         public ConfigOptions SetViewModelSuffix(string suffix)
         {
@@ -212,7 +212,7 @@ namespace ZenMvvm
         }
 
         /// <summary>
-        /// Plumbing for Fluent Api
+        /// Set Naming Convention
         /// </summary>
         public ConfigOptions SetViewAssemblyQualifiedNamespace<TAnyView>()
         {
@@ -223,7 +223,7 @@ namespace ZenMvvm
         }
 
         /// <summary>
-        /// Plumbing for Fluent Api
+        /// Set Naming Convention
         /// </summary>
         public ConfigOptions SetViewAssemblyQualifiedNamespace(string namespaceName, string assemblyName)
         {
@@ -233,7 +233,7 @@ namespace ZenMvvm
         }
 
         /// <summary>
-        /// Plumbing for Fluent Api
+        /// Set Naming Convention
         /// </summary>
         public ConfigOptions SetViewModelAssemblyQualifiedNamespace<TAnyViewModel>()
         {
@@ -244,7 +244,7 @@ namespace ZenMvvm
         }
 
         /// <summary>
-        /// Plumbing for Fluent Api
+        /// Set Naming Convention
         /// </summary>
         public ConfigOptions SetViewModelAssemblyQualifiedNamespace(string namespaceName, string assemblyName)
         {
@@ -253,5 +253,4 @@ namespace ZenMvvm
             return this;
         }
     }
-
 }

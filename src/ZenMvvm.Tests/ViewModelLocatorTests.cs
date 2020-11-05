@@ -25,7 +25,7 @@ namespace ZenMvvm.Tests
             ViewModelLocator.AutoWireViewModel(page);
 
             mockIoc.VerifyAll();
-            ViewModelLocator.SetDefaultContainerImplementation();
+            ViewModelLocator.ResetContainerImplementationToDefault();
         }
 
 
@@ -42,7 +42,7 @@ namespace ZenMvvm.Tests
             ViewModelLocator.AutoWireViewModel(page);
 
             Assert.IsType<EmptyViewModel>(page.BindingContext);
-            ViewModelLocator.SetDefaultContainerImplementation();
+            ViewModelLocator.ResetContainerImplementationToDefault();
         }
 
         [Fact]
@@ -61,7 +61,7 @@ namespace ZenMvvm.Tests
             Assert.Contains(".ViewModels", view.BindingContext.GetType().FullName);
             Assert.Contains(".Views", view.GetType().FullName);
 
-            ViewModelLocator.SetDefaultContainerImplementation();
+            ViewModelLocator.ResetContainerImplementationToDefault();
         }
 
         [Fact]
@@ -80,7 +80,7 @@ namespace ZenMvvm.Tests
             Assert.Contains(".ViewModels", view.BindingContext.GetType().FullName);
             Assert.Contains(".Views", view.GetType().FullName);
 
-            ViewModelLocator.SetDefaultContainerImplementation();
+            ViewModelLocator.ResetContainerImplementationToDefault();
         }
 
         [Fact]
@@ -99,7 +99,7 @@ namespace ZenMvvm.Tests
             Assert.Contains(", ZenMvvm.TestAssembly", view.BindingContext.GetType().AssemblyQualifiedName);
             Assert.Contains(".Views", view.GetType().FullName);
 
-            ViewModelLocator.SetDefaultContainerImplementation();
+            ViewModelLocator.ResetContainerImplementationToDefault();
         }
         //todo public void AutoWireViewModel_VmIAppearing_WiresOnViewAppearingEvent()
         //todo public void AutoWireViewModel_VmIDisappearing_WiresOnViewAppearingEvent()
