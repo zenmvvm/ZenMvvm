@@ -37,7 +37,7 @@ namespace ZenMvvm
     public class ContainerOptions
     {
         private static readonly Lazy<ContainerOptions> DefaultOptions =
-            new Lazy<ContainerOptions>(CreateDefaultContainerOptions);
+            new Lazy<ContainerOptions>(() => new ContainerOptions());
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ContainerOptions"/> class.
@@ -76,8 +76,6 @@ namespace ZenMvvm
         /// The default value is true.
         /// </remarks>
         public bool ResolveShouldBubbleUpContainers { get; set; }
-
-        private static ContainerOptions CreateDefaultContainerOptions() => new ContainerOptions();
     }
 
     //todo list registrations
@@ -87,20 +85,39 @@ namespace ZenMvvm
     public interface IDiContainer : IDisposable
     {
         /// <summary>
-        /// Reference to the container's parent container.
-        ///  Will be <c>null</c> if instance is not a child
-        ///  container.
+        /// Optional name to identify the container with. Useful if using more than one container.
+        /// See <see cref="GetContainer"/> method.
+        /// </summary> 
+        string Name { get; set; }
+
+        /// <summary>
+        /// Retrieves a container, identified by its <see cref="Name"/>
         /// </summary>
-        IDiContainer Parent { get; set; }
+        /// <param name="name">The container's name</param>
+        /// <returns></returns>
+        IDiContainer GetContainer(string name);
+
+        /// <summary>
+        /// Get the current container's parent container.
+        ///  Will be <c>null</c> if the current instance
+        ///  is not a child container.
+        /// </summary>
+        IDiContainer GetParent();
+
+        /// <summary>
+        /// Get the current container's child container. 
+        ///  Will be <c>null</c> if no child has been created.
+        /// </summary>
+        IReadOnlyList<IDiContainer> GetChildren();
 
         /// <summary>
         /// Registers a new child container and sets
-        ///  its <see cref="Parent"/> to the current
+        ///  its Parent to the current
         ///  instance.
         /// </summary>
         /// <returns>A new <see cref="IDiContainer"/> child
         ///  container</returns>
-        IDiContainer NewChildContainer();
+        IDiContainer NewChildContainer(string name = null);
 
         /// <summary>
         /// Registers a Type in the container.
@@ -240,6 +257,13 @@ namespace ZenMvvm
             where TResolved : notnull;
 
         /// <summary>
+        /// Register all implementations of an interface, or all derived classes from an abstract class.
+        /// </summary>
+        /// <typeparam name="TResolved">The interface / abstract class</typeparam>
+        /// <param name="lifeCycle"></param>
+        void RegisterTypesOf<TResolved>(LifeCycle lifeCycle = LifeCycle.Transient) where TResolved : class;
+
+        /// <summary>
         /// Pre-compile the container to enable faster
         ///  first-time resolution
         /// </summary>
@@ -302,30 +326,365 @@ namespace ZenMvvm
         void UnregisterAll();
     }
 
+    /// <summary>
+    /// Extensions to avoid having to cast DiContainer instance
+    /// to IDiContainer when trying to access its methods.
+    /// </summary>
+    [EditorBrowsable(EditorBrowsableState.Never)]
+    public static class IDiContainerExtensions
+    {
+        /// <summary>
+        /// Retrieves a container, identified by its <see cref="IDiContainer.Name"/>
+        /// </summary>
+        /// <param name="name">The container's name</param>
+        /// <returns></returns>
+        /// <param name="diContainer"></param>
+        public static IDiContainer GetContainer(this IDiContainer diContainer, string name)
+            => diContainer.GetContainer(name);
+
+        /// <summary>
+        /// Get the current container's child container. 
+        ///  Will be <c>null</c> if no child has been created.
+        /// </summary>
+        public static IReadOnlyList<IDiContainer> GetChildren(this IDiContainer diContainer)
+            => diContainer.GetChildren();
+
+        /// <summary>
+        /// Registers a new child container and sets
+        ///  its Parent to the current
+        ///  instance.
+        /// </summary>
+        /// <returns>A new <see cref="IDiContainer"/> child
+        ///  container</returns>
+        public static IDiContainer NewChildContainer(this IDiContainer container, string name = null)
+            => container.NewChildContainer(name);
+
+        /// <summary>
+        /// Registers a Type in the container.
+        /// </summary>
+        /// <param name="concreteType">Type to be instantiated</param>
+        /// <param name="resolvedType">Type to be resolved if different from <paramref name="concreteType"/></param>
+        /// <param name="key">Optional key which allows multiple registrations with the same <paramref name="resolvedType"/></param>
+        /// <param name="constructorParameters">If provided, will specify the specific contructor to be used to instantiate the <paramref name="concreteType"/>. A constructor with matching parameters will be used.</param>
+        /// <returns>Fluent API</returns>
+        ///  <param name="diContainer"></param>
+        public static IRegisterOptions RegisterType(this IDiContainer diContainer, Type concreteType, Type resolvedType = null, string key = null, params Type[] constructorParameters)
+            => diContainer.RegisterType(concreteType, resolvedType, key, constructorParameters);
+
+        /// <summary>
+        /// Register a Type in the container
+        /// </summary>
+        /// <typeparam name="TConcrete">Type to be instantiated</typeparam>
+        /// <returns>Fluent API</returns>
+        ///  <param name="diContainer"></param>
+        public static RegisterOptions Register<TConcrete>(this IDiContainer diContainer)
+            where TConcrete : notnull
+            => diContainer.Register<TConcrete>();
+        /// <summary>
+        /// Register a Type in the container
+        /// </summary>
+        /// <typeparam name="TResolved">Type that will be called to resolve</typeparam>
+        /// <typeparam name="TConcrete">Type to be instantiated</typeparam>
+        /// <returns>Fluent API</returns>
+        ///  <param name="diContainer"></param>
+        public static RegisterOptions Register<TResolved, TConcrete>(this IDiContainer diContainer)
+            where TConcrete : notnull, TResolved
+            => diContainer.Register<TResolved, TConcrete>();
+
+        /// <summary>
+        /// Register a Type in the container, with a key.
+        /// </summary>
+        /// <typeparam name="TConcrete">Type to be instantiated</typeparam>
+        /// <param name="key">Named Type which allows for multiple registrations of the same Type, identified with different keys</param>
+        /// <returns>Fluent API</returns>
+        ///  <param name="diContainer"></param>
+        public static RegisterOptions Register<TConcrete>(this IDiContainer diContainer, string key)
+            where TConcrete : notnull
+            => diContainer.Register<TConcrete>(key);
+
+        /// <summary>
+        /// Register a Type in the container, with a key.
+        /// </summary>
+        /// <typeparam name="TResolved">Type that will be called to resolve</typeparam>
+        /// <typeparam name="TConcrete">Type to be instantiated</typeparam>
+        /// <param name="key">Named Type which allows for multiple registrations of the same Type, identified with different keys</param>
+        /// <returns>Fluent API</returns>
+        ///  <param name="diContainer"></param>
+        public static RegisterOptions Register<TResolved, TConcrete>(this IDiContainer diContainer, string key)
+            where TConcrete : notnull, TResolved
+            => diContainer.Register<TResolved, TConcrete>(key);
+
+
+        /// <summary>
+        /// Register a Type in the container while specifying a constructor.
+        /// </summary>
+        /// <typeparam name="TConcrete">Type to be instantiated</typeparam>
+        /// <param name="constructorParameters">Will specify the specific contructor to be used to instantiate the <typeparamref name="TConcrete"/>. A constructor with matching parameters will be used.</param>
+        /// <returns>Fluent API</returns>
+        ///  <param name="diContainer"></param>
+        public static RegisterOptions Register<TConcrete>(this IDiContainer diContainer, params Type[] constructorParameters)
+            where TConcrete : notnull
+            => diContainer.Register<TConcrete>(constructorParameters);
+
+        /// <summary>
+        /// Register a Type in the container, specifying a constructor.
+        /// </summary>
+        /// <typeparam name="TResolved">Type that will be called to resolve</typeparam>
+        /// <typeparam name="TConcrete">Type to be instantiated</typeparam>
+        /// <param name="constructorParameters">Will specify the specific contructor to be used to instantiate the <typeparamref name="TConcrete"/>. A constructor with matching parameters will be used.</param>
+        /// <returns>Fluent API</returns>
+        ///  <param name="diContainer"></param>
+        public static RegisterOptions Register<TResolved, TConcrete>(this IDiContainer diContainer, params Type[] constructorParameters)
+            where TConcrete : notnull, TResolved
+            => diContainer.Register<TResolved, TConcrete>(constructorParameters);
+
+        /// <summary>
+        /// Register a Type in the container, with a key and specifying a constructor.
+        /// </summary>
+        /// <typeparam name="TConcrete">Type to be instantiated</typeparam>
+        /// <param name="constructorParameters">Will specify the specific contructor to be used to instantiate the <typeparamref name="TConcrete"/>. A constructor with matching parameters will be used.</param>
+        /// <param name="key">Named Type which allows for multiple registrations of the same Type, identified with different keys</param>
+        /// <returns>Fluent API</returns>
+        ///  <param name="diContainer"></param>
+        public static RegisterOptions Register<TConcrete>(this IDiContainer diContainer, string key, params Type[] constructorParameters)
+            where TConcrete : notnull
+            => diContainer.Register<TConcrete>(key, constructorParameters);
+
+        /// <summary>
+        /// Register a Type in the container, with a key and specifying a constructor.
+        /// </summary>
+        /// <typeparam name="TResolved">Type that will be called to resolve</typeparam>
+        /// <typeparam name="TConcrete">Type to be instantiated</typeparam>
+        /// <param name="constructorParameters">Will specify the specific contructor to be used to instantiate the <typeparamref name="TConcrete"/>. A constructor with matching parameters will be used.</param>
+        /// <param name="key">Named Type which allows for multiple registrations of the same Type, identified with different keys</param>
+        /// <returns>Fluent API</returns>
+        ///  <param name="diContainer"></param>
+        public static RegisterOptions Register<TResolved, TConcrete>(this IDiContainer diContainer, string key, params Type[] constructorParameters)
+            where TConcrete : notnull, TResolved
+            => diContainer.Register<TResolved, TConcrete>(key, constructorParameters);
+
+        /// <summary>
+        /// Register a lambda expression that returns an instance.
+        /// </summary>
+        /// <typeparam name="TResolved">Type that will be called to resolve</typeparam>
+        /// <typeparam name="TConcrete">Type to be instantiated</typeparam>
+        /// <param name="instanceDelegate">The lambda expression</param>
+        /// <returns>Fluent API</returns>
+        ///  <param name="diContainer"></param>
+        public static RegisterOptions RegisterExplicit<TResolved, TConcrete>(this IDiContainer diContainer, Expression<Func<IDiContainer, TConcrete>> instanceDelegate)
+            where TConcrete : notnull, TResolved
+            => diContainer.RegisterExplicit<TResolved, TConcrete>(instanceDelegate);
+
+        /// <summary>
+        /// Register a lambda expression that returns an instance, with a key.
+        /// </summary>
+        /// <typeparam name="TResolved">Type that will be called to resolve</typeparam>
+        /// <typeparam name="TConcrete">Type to be instantiated</typeparam>
+        /// <param name="instanceDelegate">The lambda expression</param>
+        /// <param name="key">Named Type which allows for multiple registrations of the same Type, identified with different keys</param>
+        /// <returns>Fluent API</returns>
+        ///  <param name="diContainer"></param>
+        public static RegisterOptions RegisterExplicit<TResolved, TConcrete>(this IDiContainer diContainer, Expression<Func<IDiContainer, TConcrete>> instanceDelegate, string key)
+            where TConcrete : notnull, TResolved
+            => diContainer.RegisterExplicit<TResolved, TConcrete>(instanceDelegate, key);
+
+        /// <summary>
+        /// Register an object that has already been instantiated
+        /// </summary>
+        /// <param name="instance">The object instance</param>
+        ///  <param name="diContainer"></param>
+        public static void RegisterInstance(this IDiContainer diContainer, object instance)
+            => diContainer.RegisterInstance(instance);
+
+        /// <summary>
+        /// Register an object that has already been instantiated
+        /// </summary>
+        /// <typeparam name="TResolved">Type to be resolved as</typeparam>
+        /// <param name="instance">The object instance</param>
+        ///  <param name="diContainer"></param>
+        public static void RegisterInstance<TResolved>(this IDiContainer diContainer, object instance)
+            where TResolved : notnull
+            => diContainer.RegisterInstance<TResolved>(instance);
+
+        /// <summary>
+        /// Register an object that has already been instantiated, with a key
+        /// </summary>
+        /// <param name="instance">The object instance</param>
+        /// <param name="key">Named Type which allows for multiple registrations of the same Type, identified with different keys</param>
+        ///  <param name="diContainer"></param>
+        public static void RegisterInstance(this IDiContainer diContainer, object instance, string key)
+            => diContainer.RegisterInstance(instance, key);
+
+        /// <summary>
+        /// Register an object that has already been instantiated, with a key
+        /// </summary>
+        /// <typeparam name="TResolved">Type to be resolved as</typeparam>
+        /// <param name="instance">The object instance</param>
+        /// <param name="key">Named Type which allows for multiple registrations of the same Type, identified with different keys</param>
+        ///  <param name="diContainer"></param>
+        public static void RegisterInstance<TResolved>(this IDiContainer diContainer, object instance, string key)
+            where TResolved : notnull
+            => diContainer.RegisterInstance<TResolved>(instance, key);
+
+        /// <summary>
+        /// Register all implementations of an interface, or all derived classes from an abstract class.
+        /// </summary>
+        /// <typeparam name="TResolved">The interface / abstract class</typeparam>
+        /// <param name="lifeCycle"></param>
+        ///  <param name="diContainer"></param>
+        public static void RegisterTypesOf<TResolved>(this IDiContainer diContainer, LifeCycle lifeCycle)
+            where TResolved : notnull
+            => diContainer.RegisterTypesOf<TResolved>(lifeCycle);
+
+        /// <summary>
+        /// Pre-compile the container to enable faster
+        ///  first-time resolution
+        /// </summary>
+        ///  <param name="diContainer"></param>
+        public static void Compile(this IDiContainer diContainer)
+            => diContainer.Compile();
+
+        /// <summary>
+        /// Resolve a Type from the container
+        /// </summary>
+        /// <typeparam name="T">Type to Resolve</typeparam>
+        /// <returns>An instance of type <typeparamref name="T"/></returns>
+        ///  <param name="diContainer"></param>
+        public static T Resolve<T>(this IDiContainer diContainer) where T : notnull
+            => diContainer.Resolve<T>();
+
+        /// <summary>
+        /// Resolve a Type from the container that has the specified key
+        /// </summary>
+        /// <typeparam name="T">Type to Resolve</typeparam>
+        /// <param name="key">The key with which it was registered</param>
+        /// <returns>An instance of type <typeparamref name="T"/></returns>
+        ///  <param name="diContainer"></param>
+        public static T Resolve<T>(this IDiContainer diContainer, string key) where T : notnull
+            => diContainer.Resolve<T>(key);
+
+        /// <summary>
+        /// Resolve the specified <c>Type</c>
+        /// </summary>
+        /// <param name="type">The Type to resolve</param>
+        /// <returns>An object of the specified type</returns>
+        ///  <param name="diContainer"></param>
+        public static object Resolve(this IDiContainer diContainer, Type type)
+            => diContainer.Resolve(type);
+
+        /// <summary>
+        /// Resolve the specified <c>Type</c>, with the specified key
+        /// </summary>
+        /// <param name="type">The Type to resolve</param>
+        /// <param name="key">The key with which it was registered</param>
+        /// <returns>An object of the specified type</returns>
+        ///  <param name="diContainer"></param>
+        public static object Resolve(this IDiContainer diContainer, Type type, string key)
+            => diContainer.Resolve(type, key);
+
+        /// <summary>
+        /// De-register a Type from the container.
+        ///  <c>IDisposable</c> will be called if it's
+        ///  implemented.
+        /// </summary>
+        /// <typeparam name="T">The Type to de-register</typeparam>
+        ///  <param name="diContainer"></param>
+        public static void Unregister<T>(this IDiContainer diContainer)
+            where T : notnull
+            => diContainer.Unregister<T>();
+
+        /// <summary>
+        /// De-register a Type from the container, with the specified key
+        ///  <c>IDisposable</c> will be called if it's
+        ///  implemented.
+        /// </summary>
+        /// <typeparam name="T">The Type to de-register</typeparam>
+        /// <param name="key">The key with which it was registered</param>
+        ///  <param name="diContainer"></param>
+        public static void Unregister<T>(this IDiContainer diContainer, string key)
+            where T : notnull
+            => diContainer.Unregister<T>(key);
+
+        /// <summary>
+        /// De-register everything in the container, calling
+        ///  <c>IDisposable</c> on all objects that implement
+        ///  it.
+        /// </summary>
+        ///  <param name="diContainer"></param>
+        public static void UnregisterAll(this IDiContainer diContainer)
+            => diContainer.UnregisterAll();
+
+        /// <summary>
+        /// Disposes the container and all its registrations
+        /// </summary>
+        /// <param name="diContainer"></param>
+        public static void Dispose(this IDiContainer diContainer)
+            => diContainer.Dispose();
+    }
 
     /// <summary>
     /// Dependency injection container
     /// </summary>
     public class DiContainer : IDiContainer
     {
-        readonly ContainerOptions options;
+        string name;
+        ///<inheritdoc/>
+        public string Name
+        {
+            get => name;
+            set
+            {
+                if (name != null)
+                    containers.TryRemove(name, out _);
+
+                if (containers.TryAdd(value, this))
+                    name = value;
+                else throw new ArgumentException("Could not set Name. Ensure the container's name is unique. " +
+                    "Less common reason could be that the operation is blocked in a multi-threaded application.");
+            }
+        }
+
+        internal static readonly ConcurrentDictionary<string, IDiContainer> containers = new ConcurrentDictionary<string, IDiContainer>();
+
+        /// <summary>
+        /// Retrieves a container, identified by its <see cref="Name"/>
+        /// </summary>
+        /// <param name="name">The container's name</param>
+        /// <returns></returns>
+        public static IDiContainer GetContainer(string name)
+            => (Instance as IDiContainer).GetContainer(name);
+        ///<inheritdoc/>
+        IDiContainer IDiContainer.GetContainer(string name)
+        => containers.TryGetValue(name, out IDiContainer container)
+            ? container
+            : throw new KeyNotFoundException(
+                "Couldn't retrieve container. Is the name correct?");
+
+
+        /// <summary>
+        /// Global settings applied across all containers
+        /// </summary>
+        internal static readonly ContainerOptions options = new ContainerOptions();
 
         /// <summary>
         /// Instantiate a new container
         /// </summary>
-        public DiContainer() : this(ContainerOptions.Default)
+        /// <param name="name">Optional name for the container. Helpful if you plan on using many containers.</param>
+        public DiContainer(string name = null)
         {
+            Name = name ?? Guid.NewGuid().ToString();
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DiContainer"/> class.
         /// </summary>
         /// <param name="options">The <see cref="ContainerOptions"/> instances that represents the configurable options.</param>
-        public DiContainer(ContainerOptions options) : this(o =>
+        /// <param name="name">Optional name for the container. Helpful if you plan on using many containers.</param>
+        public DiContainer(ContainerOptions options, string name = null) : this(o =>
         {
             o.TryResolveUnregistered = options.TryResolveUnregistered;
             o.ResolveShouldBubbleUpContainers = options.ResolveShouldBubbleUpContainers;
-        })
+        }, name)
         {
         }
 
@@ -334,11 +693,10 @@ namespace ZenMvvm
         /// Initializes a new instance of the <see cref="DiContainer"/> class.
         /// </summary>
         /// <param name="configureOptions">A delegate used to configure <see cref="ContainerOptions"/>.</param>
-        public DiContainer(Action<ContainerOptions> configureOptions)
+        /// <param name="name">Optional name for the container. Helpful if you plan on using many containers.</param>
+        public DiContainer(Action<ContainerOptions> configureOptions, string name = null) : this(name)
         {
-            this.options = new ContainerOptions();
             configureOptions(options);
-            this.container = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
         }
 
         /// <summary>
@@ -367,6 +725,7 @@ namespace ZenMvvm
         [EditorBrowsable(EditorBrowsableState.Never)]
         public static void ResetContainer()
         {
+            DiContainer.containers.Clear();
             Instance = new DiContainer();
         }
 
@@ -377,7 +736,10 @@ namespace ZenMvvm
         /// <remarks>Will only apply to the singleton, and will recreate the container (erasing any registrations)</remarks>
         /// <param name="options">The <see cref="ContainerOptions"/> instances that represents the configurable options.</param>
         public static void Initialize(ContainerOptions options)
-            => Instance = new DiContainer(options);
+        {
+            DiContainer.containers.Clear();
+            Instance = new DiContainer(options);
+        }
 
         /// <summary>
         /// Initializes the Singleton intance of the <see cref="DiContainer"/>
@@ -386,22 +748,56 @@ namespace ZenMvvm
         /// <remarks>Will only apply to the singleton, and will recreate the container (erasing any registrations)</remarks>
         /// <param name="configureOptions">A delegate used to configure <see cref="ContainerOptions"/>.</param>
         public static void Initialize(Action<ContainerOptions> configureOptions)
-            => Instance = new DiContainer(configureOptions);
+        {
+            DiContainer.containers.Clear();
+            Instance = new DiContainer(configureOptions);
+        }
 
         internal static DiContainer Instance { get; private set; } = new DiContainer();
 
+        private IDiContainer parent;
         ///<inheritdoc/>
-        public IDiContainer Parent { get; set; }
+        public IDiContainer GetParent()
+            => parent;
 
-        internal ConcurrentDictionary<Tuple<Type, string>, MetaObject> container;
+        private readonly List<IDiContainer> children = new List<IDiContainer>();
+        /// <summary>
+        /// Get the current container's child container. 
+        ///  Will be <c>null</c> if no child has been created.
+        /// </summary>
+        public static IReadOnlyList<IDiContainer> GetChildren()
+            => (Instance as IDiContainer).GetChildren();
+        ///<inheritdoc/>
+        IReadOnlyList<IDiContainer> IDiContainer.GetChildren()
+            => children;
+
+        internal ConcurrentDictionary<Tuple<Type, string>, MetaObject> container = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
         internal ConcurrentDictionary<Tuple<Type, string>, MetaObject> parentContainer;
         IEnumerable<Type> assemblyTypesCache;
 
+        /// <summary>
+        /// Registers a new child container and sets
+        ///  its Parent to the current
+        ///  instance.
+        /// </summary>
+        /// <returns>A new <see cref="IDiContainer"/> child
+        ///  container</returns>
+        public static IDiContainer NewChildContainer(string name = null)
+            => (Instance as IDiContainer).NewChildContainer(name);
         ///<inheritdoc/>
-        public IDiContainer NewChildContainer()
+        IDiContainer IDiContainer.NewChildContainer(string name)
         {
-            return new DiContainer() { Parent = this, parentContainer = this.container };
+            var child = new DiContainer(name)
+            {
+                parentContainer = this.container,
+                parent = this
+            };
+
+            this.children.Add(child);
+
+            return child;
         }
+
 
         #region Registration
         #region Register
@@ -663,6 +1059,50 @@ namespace ZenMvvm
                 , InternalRegister(container, typeof(TResolved), key, new MetaObject(instance)));
 
 
+        /// <summary>
+        /// Register all implementations of an interface, or all derived classes from an abstract class.
+        /// </summary>
+        /// <typeparam name="TResolved">The interface / abstract class</typeparam>
+        /// <param name="lifeCycle"></param>
+        public static void RegisterTypesOf<TResolved>(LifeCycle lifeCycle = LifeCycle.Transient) where TResolved : class
+            => (Instance as IDiContainer).RegisterTypesOf<TResolved>(lifeCycle);
+        ///<inheritdoc/>
+        void IDiContainer.RegisterTypesOf<TResolved>(LifeCycle lifeCycle)
+            => InternalRegisterTypesOf(typeof(TResolved), lifeCycle);
+
+        void InternalRegisterTypesOf(Type resolved, LifeCycle lifeCycle)
+        {
+            IRegisterOptions registerOptions;
+            IEnumerable<Type> types;
+
+            if (resolved.IsInterface)
+                types = resolved.Assembly
+                .GetTypes()
+                .Where(t => t
+                    .GetInterfaces()
+                    .Contains(resolved));
+            else if (resolved.IsAbstract)
+                types = resolved.Assembly
+                .GetTypes()
+                .Where(t => t
+                    .IsSubclassOf(resolved));
+            else
+                throw new RegisterException($"{nameof(RegisterTypesOf)} : {resolved} should be an interace or abstract class");
+
+            foreach (Type type in types)
+            {
+                //Register each type
+                registerOptions = (Instance as IDiContainer).RegisterType(type, resolved, type.Name);
+                if (lifeCycle == LifeCycle.Singleton)
+                    registerOptions.SingleInstance();
+            }
+
+            //Register the IEnumerable
+            registerOptions = (Instance as IDiContainer).RegisterType(Type.GetType($"System.Collections.Generic.IEnumerable`1[[{resolved.AssemblyQualifiedName}]]"));
+            if (lifeCycle == LifeCycle.Singleton)
+                registerOptions.SingleInstance();
+        }
+
 
         #endregion
 
@@ -723,6 +1163,8 @@ namespace ZenMvvm
 
             if (!container.TryAdd(containerKey, metaObject))
             {
+                //todo ContainerOption to not throw if already contains
+
                 var builder = new StringBuilder();
                 builder.Append($"{containerKey.Item1} is already registered");
                 if (containerKey.Item2 != null)
@@ -812,6 +1254,7 @@ namespace ZenMvvm
             return metaObject.NewExpression;
         }
 
+        //todo might read easier as an extension method
         internal void MakeNewExpression(ConcurrentDictionary<Tuple<Type, string>, MetaObject> container, MetaObject metaObject)
         {
             var paramsInfo = metaObject.ConstructorCache?.GetParameters();
@@ -826,7 +1269,10 @@ namespace ZenMvvm
                     var param = paramsInfo[i];
                     var namedAttribute = param.GetCustomAttribute<ResolveNamedAttribute>();
 
-                    argsExp[i] = GetExpression(container, param.ParameterType, namedAttribute?.Key);
+                    argsExp[i] = GetExpression(
+                        container,
+                        param.ParameterType,
+                        namedAttribute?.Key);
                 }
 
                 metaObject.NewExpression = Expression.New(metaObject.ConstructorCache, argsExp);
@@ -854,7 +1300,9 @@ namespace ZenMvvm
 
             if (resolvedType.IsGenericType)
             {
-                if (resolvedType.IsConstructedGenericType) //if Generic
+                if (!resolvedType.IsConstructedGenericType)
+                    throw new ResolveException($"{resolvedType.Name} is not a Constructed Generic Type");
+                else if (resolvedType.GetGenericTypeDefinition() != typeof(IEnumerable<>)) //if Constructed Generic
                 {
                     var genericTypeDefinition = resolvedType.GetGenericTypeDefinition();
 
@@ -873,7 +1321,7 @@ namespace ZenMvvm
                 }
             }
 
-            if (Parent != null && options.ResolveShouldBubbleUpContainers == true)
+            if (parent != null && options.ResolveShouldBubbleUpContainers == true)
                 return GetMetaObject(parentContainer, resolvedType, key);
 
             if (!options.TryResolveUnregistered)
@@ -882,7 +1330,16 @@ namespace ZenMvvm
                     $"register the class, or configure the container options differently " +
                     $"when initialising the conatiner.");
 
-            if (resolvedType.IsInterface || resolvedType.IsAbstract)
+            if (resolvedType.IsGenericType
+                && resolvedType.GetGenericTypeDefinition() == typeof(IEnumerable<>)) //Register as Singleton
+            {
+                Instance.InternalRegisterTypesOf(
+                    resolvedType.GetGenericArguments()[0],
+                    LifeCycle.Singleton);
+
+                return GetMetaObject(container, resolvedType, null);
+            }
+            else if (resolvedType.IsInterface || resolvedType.IsAbstract) //register as Singleton
             {
                 IEnumerable<Type> implementations;
 
@@ -922,7 +1379,7 @@ namespace ZenMvvm
                 metaObject = new MetaObject(implementations.ToArray()[0], LifeCycle.Singleton);
             }
             else
-                metaObject = new MetaObject(resolvedType, LifeCycle.Transient);
+                metaObject = new MetaObject(resolvedType, LifeCycle.Transient); //Register as Transient
 
             if (container.TryAdd(new Tuple<Type, string>(resolvedType, null), metaObject))
                 return metaObject;
@@ -1059,6 +1516,9 @@ namespace ZenMvvm
         void IDisposable.Dispose()
         {
             InternalUnregisterAll(container);
+            if (!containers.TryRemove(Name, out _))
+                Console.WriteLine("SmartDi Error: Could not remove registration of container " +
+                    $"named '{Name}' when disposing");
         }
     }
 
@@ -1371,5 +1831,4 @@ namespace ZenMvvm
         {
         }
     }
-
 }

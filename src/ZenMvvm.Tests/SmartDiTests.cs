@@ -2,6 +2,7 @@ using System;
 using Xunit;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ZenMvvm.Tests
 {
@@ -13,6 +14,7 @@ namespace ZenMvvm.Tests
         {
         }
 
+        #region CLASSES
         public abstract class DisposableBase : IDisposable
         {
             public bool Disposed { get; private set; }
@@ -55,7 +57,7 @@ namespace ZenMvvm.Tests
         }
 
         interface IService { }
-        class MyService : IService { }
+        class MyService : IService { public string Name { get; set; } }
 
         interface IServiceWithTwoImplementations { }
         class ServiceTwo : IServiceWithTwoImplementations { }
@@ -127,7 +129,7 @@ namespace ZenMvvm.Tests
             {
 
             }
-            public ClassWithKeyedDependency([ResolveNamed("test")]IService service)
+            public ClassWithKeyedDependency([ResolveNamed("test")] IService service)
             {
                 Service = service;
             }
@@ -201,6 +203,13 @@ namespace ZenMvvm.Tests
                 => _onImplicitDispose?.DynamicInvoke();
         }
 
+        public abstract class ClassThatsAbstract { }
+        public class ClassInheritsAbstract1 : ClassThatsAbstract { }
+        public class ClassInheritsAbstract2 : ClassThatsAbstract { }
+
+        public class ClassThatsGeneric<T> { }
+        #endregion
+
         [Fact]
         public void Constructor()
         {
@@ -211,10 +220,26 @@ namespace ZenMvvm.Tests
         public void InitializeStaticContainer()
         {
             //Not a real test
-            DiContainer.Initialize(new ContainerOptions {
+            DiContainer.Initialize(new ContainerOptions
+            {
                 TryResolveUnregistered = false,
-                ResolveShouldBubbleUpContainers = false});
+                ResolveShouldBubbleUpContainers = false
+            });
         }
+
+        [Fact]
+        public void ContainerOptions_AreGlobal()
+        {
+            ContainerOptions options = new ContainerOptions
+            {
+                TryResolveUnregistered = false
+            };
+            using var container = new DiContainer(options);
+            using var secondContainer = new DiContainer();
+
+            Assert.False(DiContainer.options.TryResolveUnregistered);
+        }
+
 
         #region MetaObject
 
@@ -227,7 +252,7 @@ namespace ZenMvvm.Tests
         [Fact]
         public void MetaObjectCtor_InstanceDelegateNull_Throws()
         {
-            Assert.Throws<ArgumentNullException>(() => new MetaObject(typeof(ConcreteOnly), LifeCycle.Transient, instanceDelegate: null,null));
+            Assert.Throws<ArgumentNullException>(() => new MetaObject(typeof(ConcreteOnly), LifeCycle.Transient, instanceDelegate: null, null));
         }
 
         [Fact]
@@ -242,15 +267,15 @@ namespace ZenMvvm.Tests
             Assert.Throws<RegisterException>(() => new MetaObject(typeof(ConcreteOnly), LifeCycle.Singleton, typeof(MyService)));
         }
 
-//#if DEBUG
-//        [Fact]
-//        public void MetaObject_RegisteredTransient_SetInstance_Throws()
-//        {
-//            var metaObject = new MetaObject(typeof(ConcreteOnly), LifeCycle.Transient);
-//            Assert.Throws<Exception>(() => metaObject.Instance = new ConcreteOnly());
+        //#if DEBUG
+        //        [Fact]
+        //        public void MetaObject_RegisteredTransient_SetInstance_Throws()
+        //        {
+        //            var metaObject = new MetaObject(typeof(ConcreteOnly), LifeCycle.Transient);
+        //            Assert.Throws<Exception>(() => metaObject.Instance = new ConcreteOnly());
 
-//        }
-//#endif
+        //        }
+        //#endif
 
         #endregion
 
@@ -289,7 +314,7 @@ namespace ZenMvvm.Tests
         public void RegisterConcreteType_RegistersWithExpectedKey()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.Register<MyService>();
 
@@ -313,7 +338,7 @@ namespace ZenMvvm.Tests
         public void RegisterConcreteType_RegistersAsMultiInstance()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.Register<MyService>();
 
@@ -339,7 +364,7 @@ namespace ZenMvvm.Tests
         public void RegisterResolvedType_RegistersWithExpectedKey()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.Register<IService, MyService>();
 
@@ -363,7 +388,7 @@ namespace ZenMvvm.Tests
         public void RegisterResolvedType_Default_RegistersAsMultiInstance()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.Register<IService, MyService>();
 
@@ -391,7 +416,7 @@ namespace ZenMvvm.Tests
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
             DiContainer.SetContainer(mock);
 
-            DiContainer.Register<ClassWith3Ctors>("test",typeof(IService));
+            DiContainer.Register<ClassWith3Ctors>("test", typeof(IService));
 
             Assert.Equal("(IService service)", DiContainer.Resolve<ClassWith3Ctors>("test").ConstructorUsed);
 
@@ -399,10 +424,20 @@ namespace ZenMvvm.Tests
         }
 
         [Fact]
+        public void RegisterWithCtorParametersWithKey_ResolvesWithSelectedCtor()
+        {
+            var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
+            using var container = new DiContainer(mock, ContainerOptions.Default);
+            container.Register<ClassWith3Ctors>("test", typeof(IService));
+
+            Assert.Equal("(IService service)", container.Resolve<ClassWith3Ctors>("test").ConstructorUsed);
+        }
+
+        [Fact]
         public void RegisterConcreteTypeWithKey_RegistersWithExpectedKey()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.Register<MyService>("test");
 
@@ -428,7 +463,7 @@ namespace ZenMvvm.Tests
         public void RegisterResolvedTypeWithKey_RegistersWithExpectedKey()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.Register<IService, MyService>("test");
 
@@ -449,16 +484,39 @@ namespace ZenMvvm.Tests
         }
 
         [Fact]
+        public void RegisterResolvedWithCtorParameters_ResolvesWithSelectedCtor()
+        {
+            var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
+
+
+            using var container = new DiContainer(mock, ContainerOptions.Default);
+            container.Register<IClassWith3Ctors, ClassWith3Ctors>(typeof(IService));
+
+            Assert.Equal("(IService service)", container.Resolve<IClassWith3Ctors>().ConstructorUsed);
+        }
+
+        [Fact]
         public void StaticRegisterResolvedWithCtorParametersWithKey_ResolvesWithSelectedCtor()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
             DiContainer.SetContainer(mock);
 
-            DiContainer.Register<IClassWith3Ctors, ClassWith3Ctors>("test",typeof(IService));
+            DiContainer.Register<IClassWith3Ctors, ClassWith3Ctors>("test", typeof(IService));
 
             Assert.Equal("(IService service)", DiContainer.Resolve<IClassWith3Ctors>("test").ConstructorUsed);
 
             DiContainer.ResetContainer();
+        }
+
+        [Fact]
+        public void RegisterResolvedWithCtorParametersWithKey_ResolvesWithSelectedCtor()
+        {
+            var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
+            using var container = new DiContainer(mock, ContainerOptions.Default);
+
+            container.Register<IClassWith3Ctors, ClassWith3Ctors>("test", typeof(IService));
+
+            Assert.Equal("(IService service)", container.Resolve<IClassWith3Ctors>("test").ConstructorUsed);
         }
 
         #endregion
@@ -481,7 +539,7 @@ namespace ZenMvvm.Tests
         public void RegisterInstance_RegistersWithExpectedKey()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.RegisterInstance(new MyService());
 
@@ -505,7 +563,7 @@ namespace ZenMvvm.Tests
         public void RegisterInstanceWithResolvedType_RegistersWithExpectedKey()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.RegisterInstance<IService>(new MyService());
 
@@ -529,7 +587,7 @@ namespace ZenMvvm.Tests
         public void RegisterInstanceWithKey_RegistersWithExpectedKey()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.RegisterInstance(new MyService(), "test");
 
@@ -553,7 +611,7 @@ namespace ZenMvvm.Tests
         public void RegisterInstanceWithResolvedTypeWithKey_RegistersWithExpectedKey()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.RegisterInstance<IService>(new MyService(), "test");
 
@@ -571,7 +629,7 @@ namespace ZenMvvm.Tests
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
             DiContainer.SetContainer(mock);
 
-            DiContainer.RegisterExplicit<MyService,MyService>(c => new MyService());
+            DiContainer.RegisterExplicit<MyService, MyService>(c => new MyService());
 
             Assert.True(mock.ContainsKey(new Tuple<Type, string>(typeof(MyService), null)));
 
@@ -582,9 +640,9 @@ namespace ZenMvvm.Tests
         public void RegisterExpression_RegistersWithExpectedKey()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
-            container.RegisterExplicit<MyService,MyService>(c => new MyService());
+            container.RegisterExplicit<MyService, MyService>(c => new MyService());
 
             Assert.True(mock.ContainsKey(new Tuple<Type, string>(typeof(MyService), null)));
         }
@@ -595,7 +653,7 @@ namespace ZenMvvm.Tests
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
             DiContainer.SetContainer(mock);
 
-            DiContainer.RegisterExplicit<IService,MyService>(c => new MyService());
+            DiContainer.RegisterExplicit<IService, MyService>(c => new MyService());
 
             Assert.True(mock.ContainsKey(new Tuple<Type, string>(typeof(IService), null)));
 
@@ -606,9 +664,9 @@ namespace ZenMvvm.Tests
         public void RegisterExpressionWithResolvedType_RegistersWithExpectedKey()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
-            container.RegisterExplicit<IService,MyService>(c => new MyService());
+            container.RegisterExplicit<IService, MyService>(c => new MyService());
 
             Assert.True(mock.ContainsKey(new Tuple<Type, string>(typeof(IService), null)));
         }
@@ -619,7 +677,7 @@ namespace ZenMvvm.Tests
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
             DiContainer.SetContainer(mock);
 
-            DiContainer.RegisterExplicit<MyService,MyService>(c => new MyService(), "test");
+            DiContainer.RegisterExplicit<MyService, MyService>(c => new MyService(), "test");
 
             Assert.True(mock.ContainsKey(new Tuple<Type, string>(typeof(MyService), "test")));
 
@@ -630,9 +688,9 @@ namespace ZenMvvm.Tests
         public void RegisterExpressionWithKey_RegistersWithExpectedKey()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
-            container.RegisterExplicit<MyService,MyService>(c => new MyService(), "test");
+            container.RegisterExplicit<MyService, MyService>(c => new MyService(), "test");
 
             Assert.True(mock.ContainsKey(new Tuple<Type, string>(typeof(MyService), "test")));
         }
@@ -643,7 +701,7 @@ namespace ZenMvvm.Tests
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
             DiContainer.SetContainer(mock);
 
-            DiContainer.RegisterExplicit<IService,MyService>(c => new MyService(), "test");
+            DiContainer.RegisterExplicit<IService, MyService>(c => new MyService(), "test");
 
             Assert.True(mock.ContainsKey(new Tuple<Type, string>(typeof(IService), "test")));
 
@@ -654,9 +712,9 @@ namespace ZenMvvm.Tests
         public void RegisterExpressionWithResolvedTypeWithKey_RegistersWithExpectedKey()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
-            container.RegisterExplicit<IService,MyService>(c => new MyService(), "test");
+            container.RegisterExplicit<IService, MyService>(c => new MyService(), "test");
 
             Assert.True(mock.ContainsKey(new Tuple<Type, string>(typeof(IService), "test")));
         }
@@ -681,7 +739,7 @@ namespace ZenMvvm.Tests
         public void RegisterType_Defaults_RegistersWithExpectedKey()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.RegisterType(typeof(MyService));
 
@@ -705,7 +763,7 @@ namespace ZenMvvm.Tests
         public void RegisterType_ResolvedType_RegistersWithExpectedKey()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.RegisterType(typeof(MyService), typeof(IService));
 
@@ -729,7 +787,7 @@ namespace ZenMvvm.Tests
         public void RegisterType_ResolvedTypeWithKey_RegistersWithExpectedKey()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.RegisterType(typeof(MyService), typeof(IService), "test");
 
@@ -753,12 +811,157 @@ namespace ZenMvvm.Tests
         public void RegisterType_WithConstructorParams_RegistersWithExpectedKey()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.RegisterType(typeof(ClassWith3Ctors), null, null, typeof(IService), typeof(ConcreteOnly));
 
             Assert.True(mock.ContainsKey(new Tuple<Type, string>(typeof(ClassWith3Ctors), null)));
         }
+        #endregion
+
+        #region RegisterTypesOf
+        [Fact]
+        public void RegisterTypesOf_NotInterfaceAbstract_Throws()
+        {
+            Assert.Throws<RegisterException>(() => DiContainer.RegisterTypesOf<MyService>());
+
+            DiContainer.ResetContainer();
+        }
+
+        [Fact]
+        public void RegisterTypesOf_Abstract_Singleton()
+        {
+            var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
+            DiContainer.SetContainer(mock);
+            DiContainer.RegisterTypesOf<ClassThatsAbstract>(LifeCycle.Singleton);
+
+            Assert.Equal(3, mock.Count);
+
+            Assert.Contains(mock, r =>
+                r.Key.Equals(new Tuple<Type, string>(typeof(ClassThatsAbstract), nameof(ClassInheritsAbstract1)))
+                && r.Value.TConcrete.Equals(typeof(ClassInheritsAbstract1))
+                && r.Value.LifeCycle.Equals(LifeCycle.Singleton)
+                );
+
+            Assert.Contains(mock, r =>
+                r.Key.Equals(new Tuple<Type, string>(typeof(ClassThatsAbstract), nameof(ClassInheritsAbstract2)))
+                && r.Value.TConcrete.Equals(typeof(ClassInheritsAbstract2))
+                && r.Value.LifeCycle.Equals(LifeCycle.Singleton)
+                );
+
+            Assert.Contains(mock, r =>
+                r.Key.Equals(new Tuple<Type, string>(typeof(IEnumerable<ClassThatsAbstract>), null))
+                && r.Value.TConcrete.Equals(typeof(IEnumerable<ClassThatsAbstract>))
+                && r.Value.LifeCycle.Equals(LifeCycle.Singleton)
+                );
+
+            DiContainer.ResetContainer();
+        }
+
+        [Fact]
+        public void RegisterTypesOf_Interface_Singleton()
+        {
+            var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
+            DiContainer.SetContainer(mock);
+            DiContainer.RegisterTypesOf<IServiceWithTwoImplementations>(LifeCycle.Singleton);
+
+            Assert.Equal(3, mock.Count);
+
+            Assert.Contains(mock, r =>
+                r.Key.Equals(new Tuple<Type, string>(typeof(IServiceWithTwoImplementations), nameof(MockServiceTwo)))
+                && r.Value.TConcrete.Equals(typeof(MockServiceTwo))
+                && r.Value.LifeCycle.Equals(LifeCycle.Singleton)
+                );
+
+            Assert.Contains(mock, r =>
+                r.Key.Equals(new Tuple<Type, string>(typeof(IServiceWithTwoImplementations), nameof(ServiceTwo)))
+                && r.Value.TConcrete.Equals(typeof(ServiceTwo))
+                && r.Value.LifeCycle.Equals(LifeCycle.Singleton)
+                );
+
+            Assert.Contains(mock, r =>
+                r.Key.Equals(new Tuple<Type, string>(typeof(IEnumerable<IServiceWithTwoImplementations>), null))
+                && r.Value.TConcrete.Equals(typeof(IEnumerable<IServiceWithTwoImplementations>))
+                && r.Value.LifeCycle.Equals(LifeCycle.Singleton)
+                );
+
+            DiContainer.ResetContainer();
+        }
+
+        [Fact]
+        public void RegisterTypesOf_Interface()
+        {
+            var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
+            DiContainer.SetContainer(mock);
+            DiContainer.RegisterTypesOf<IServiceWithTwoImplementations>();
+
+            Assert.Equal(3, mock.Count);
+
+            Assert.Contains(mock, r =>
+                r.Key.Equals(new Tuple<Type, string>(typeof(IServiceWithTwoImplementations), nameof(MockServiceTwo)))
+                && r.Value.TConcrete.Equals(typeof(MockServiceTwo))
+                && r.Value.LifeCycle.Equals(LifeCycle.Transient)
+                );
+
+            Assert.Contains(mock, r =>
+                r.Key.Equals(new Tuple<Type, string>(typeof(IServiceWithTwoImplementations), nameof(ServiceTwo)))
+                && r.Value.TConcrete.Equals(typeof(ServiceTwo))
+                && r.Value.LifeCycle.Equals(LifeCycle.Transient)
+                );
+
+            Assert.Contains(mock, r =>
+                r.Key.Equals(new Tuple<Type, string>(typeof(IEnumerable<IServiceWithTwoImplementations>), null))
+                && r.Value.TConcrete.Equals(typeof(IEnumerable<IServiceWithTwoImplementations>))
+                && r.Value.LifeCycle.Equals(LifeCycle.Transient)
+                );
+
+            DiContainer.ResetContainer();
+        }
+
+        [Fact]
+        public void ResolveIEnumerableInterface_NotRegistered()
+        {
+            var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
+            DiContainer.SetContainer(mock);
+
+            var enumerable = DiContainer.Resolve<IEnumerable<IServiceWithTwoImplementations>>();
+
+            Assert.Equal(2, enumerable.Count());
+            Assert.Contains(enumerable, t => t.GetType().Equals(typeof(ServiceTwo)));
+            Assert.Contains(enumerable, t => t.GetType().Equals(typeof(MockServiceTwo)));
+
+            DiContainer.ResetContainer();
+        }
+
+        [Fact]
+        public void ResolveIEnumerableInterface_NotRegistered_SomeMembersRegistered()
+        {
+            var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
+            DiContainer.SetContainer(mock);
+            DiContainer.Register<IServiceWithTwoImplementations, MockServiceTwo>(nameof(MockServiceTwo)).SingleInstance();
+
+            Assert.Throws<RegisterException>(() =>
+                DiContainer.Resolve<IEnumerable<IServiceWithTwoImplementations>>());
+
+            DiContainer.ResetContainer();
+        }
+
+        [Fact]
+        public void ResolveIEnumerableAbstract_NotRegistered()
+        {
+            var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
+            DiContainer.SetContainer(mock);
+
+            var enumerable = DiContainer.Resolve<IEnumerable<ClassThatsAbstract>>();
+
+            Assert.Equal(2, enumerable.Count());
+            Assert.Contains(enumerable, t => t.GetType().Equals(typeof(ClassInheritsAbstract1)));
+            Assert.Contains(enumerable, t => t.GetType().Equals(typeof(ClassInheritsAbstract2)));
+
+            DiContainer.ResetContainer();
+        }
+
+
         #endregion
 
         #region RegisterOptions
@@ -781,7 +984,7 @@ namespace ZenMvvm.Tests
         public void RegisterConcreteType_OptionsSingleInstance_RegistersAsSingleInstance()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container
                 .Register<MyService>()
@@ -808,7 +1011,7 @@ namespace ZenMvvm.Tests
         public void RegisterResolvedType_RegistersAsMultiInstance()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container
                 .Register<IService, MyService>();
@@ -833,7 +1036,7 @@ namespace ZenMvvm.Tests
         [Fact]
         public void RegisterConcreteType__UsingConstructorOption_ResolvesSpecifiedConstructor()
         {
-            IDiContainer container = new DiContainer();
+            using var container = new DiContainer();
             container.Register<IService, MyService>();
 
             container
@@ -865,6 +1068,21 @@ namespace ZenMvvm.Tests
 
             DiContainer.ResetContainer();
         }
+
+        [Fact]
+        public void Compile_SetsActivationExpression()
+        {
+            var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
+            using var container = new DiContainer(mock, ContainerOptions.Default);
+            container.Register<ClassWith3Ctors>("test", typeof(IService));
+
+            mock.TryGetValue(new Tuple<Type, string>(typeof(ClassWith3Ctors), "test"), out MetaObject metaObject);
+            Assert.Null(metaObject.ActivationExpression);
+
+            container.Compile();
+            Assert.NotNull(metaObject.ActivationExpression);
+        }
+
 
         #endregion
         #endregion
@@ -930,15 +1148,24 @@ namespace ZenMvvm.Tests
         public void GetMetaObject_IsGenericType_NotConstructedGeneric_Throws()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            var container = new DiContainer();
-            Assert.Throws<ResolveException>(()=>container.GetMetaObject(mock, typeof(IEnumerable<int>), null));
+            using var container = new DiContainer();
+            Assert.Throws<ResolveException>(() => container.GetMetaObject(mock, typeof(ClassThatsGeneric<>), null));
         }
+
+        [Fact]
+        public void Resolve_IsConstructedGeneric_NotRegistered()
+        {
+            using var container = new DiContainer();
+
+            Assert.IsType<ClassThatsGeneric<MyService>>(container.Resolve<ClassThatsGeneric<MyService>>());
+        }
+
 
         [Fact]
         public void GetMetaObject_UnregisteredInterface_Gt1Implementations_Throws()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            var container = new DiContainer();
+            using var container = new DiContainer();
             Assert.Throws<ResolveException>(() => container.GetMetaObject(mock, typeof(IServiceWithTwoImplementations), null));
         }
 
@@ -946,7 +1173,7 @@ namespace ZenMvvm.Tests
         public void GetMetaObject_UnregisteredInterface_NoImplementations_Throws()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            var container = new DiContainer();
+            using var container = new DiContainer();
             Assert.Throws<ResolveException>(() => container.GetMetaObject(mock, typeof(IServiceWithNoImplementations), null));
         }
 
@@ -954,16 +1181,16 @@ namespace ZenMvvm.Tests
         public void GetEnumerableException_Nothing_Registered_Throws()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            var container = new DiContainer();
-            Assert.Throws<ResolveException>(()=>container.GetEnumerableExpression(mock, typeof(IEnumerable<IService>)));
-            
+            using var container = new DiContainer();
+            Assert.Throws<ResolveException>(() => container.GetEnumerableExpression(mock, typeof(IEnumerable<IService>)));
+
         }
 
         [Fact]
         public void MakeNewExpression_ConstructorCacheNull_Throws()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            var container = new DiContainer();
+            using var container = new DiContainer();
             var metaObject = new MetaObject(new MyService());
             Assert.Null(metaObject.ConstructorCache);
             Assert.Throws<Exception>(() => container.MakeNewExpression(mock, metaObject));
@@ -984,7 +1211,7 @@ namespace ZenMvvm.Tests
         [Fact]
         public void Resolve_Unregistered_Works()
         {
-            IDiContainer container = new DiContainer();
+            using var container = new DiContainer(ContainerOptions.Default);
             var obj = container.Resolve<ClassThatsResolvableWithoutRegistering>();
 
             Assert.IsType<ClassThatsResolvableWithoutRegistering>(obj);
@@ -1025,8 +1252,7 @@ namespace ZenMvvm.Tests
         [Fact]
         public void StaticResolve_InterfaceThatsNotRegistered_Works()
         {
-            DiContainer.Initialize(ContainerOptions.Default);
-Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
+            Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
 
             DiContainer.ResetContainer();
         }
@@ -1047,7 +1273,7 @@ Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
         //    var registeredObject = new ClassThatHasToBeRegistered(3);
         //    DiContainer.RegisterInstance(registeredObject);
 
-        //    IDiContainer container = new DiContainer();
+        //    using var container = new DiContainer();
         //    var resolved = container.Resolve<ClassThatHasToBeRegistered>();
 
         //    Assert.Equal(registeredObject, resolved);
@@ -1078,7 +1304,7 @@ Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
         public void ResolveWithKey_InstanceRegistered_ReturnsInstance()
         {
             var instance = new MyService();
-            IDiContainer container = new DiContainer();
+            using var container = new DiContainer();
             container.RegisterInstance(instance, "test");
             var resolved = container.Resolve<MyService>("test");
             Assert.Equal(instance, resolved); //exactly same object returned
@@ -1131,7 +1357,7 @@ Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
         public void StaticResolve_Expression_ReturnsInstance()
         {
             DiContainer.Register<IService, MyService>();
-            DiContainer.RegisterExplicit<ClassWith3Ctors,ClassWith3Ctors>(c => new ClassWith3Ctors(DiContainer.Resolve<IService>()));
+            DiContainer.RegisterExplicit<ClassWith3Ctors, ClassWith3Ctors>(c => new ClassWith3Ctors(DiContainer.Resolve<IService>()));
 
             var resolved = DiContainer.Resolve<ClassWith3Ctors>();
             Assert.IsType<ClassWith3Ctors>(resolved);
@@ -1142,9 +1368,9 @@ Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
         [Fact]
         public void Resolve_Expression_ReturnsInstance()
         {
-            IDiContainer container = new DiContainer();
+            using var container = new DiContainer();
             container.Register<IService, MyService>();
-            container.RegisterExplicit<ClassWith3Ctors,ClassWith3Ctors>(c => new ClassWith3Ctors(c.Resolve<IService>()));
+            container.RegisterExplicit<ClassWith3Ctors, ClassWith3Ctors>(c => new ClassWith3Ctors(c.Resolve<IService>()));
 
             var resolved = container.Resolve<ClassWith3Ctors>();
             Assert.IsType<ClassWith3Ctors>(resolved);
@@ -1154,7 +1380,7 @@ Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
         public void StaticResolve_ExpressionWithResolveType_ReturnsInstance()
         {
             DiContainer.Register<IService, MyService>();
-            DiContainer.RegisterExplicit<IClassWith3Ctors,ClassWith3Ctors>(c => new ClassWith3Ctors(DiContainer.Resolve<IService>()));
+            DiContainer.RegisterExplicit<IClassWith3Ctors, ClassWith3Ctors>(c => new ClassWith3Ctors(DiContainer.Resolve<IService>()));
 
             var resolved = DiContainer.Resolve<IClassWith3Ctors>();
             Assert.IsType<ClassWith3Ctors>(resolved);
@@ -1165,9 +1391,9 @@ Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
         [Fact]
         public void Resolve_ExpressionWithResolveType_ReturnsInstance()
         {
-            IDiContainer container = new DiContainer();
+            using var container = new DiContainer();
             container.Register<IService, MyService>();
-            container.RegisterExplicit<IClassWith3Ctors,ClassWith3Ctors>(c => new ClassWith3Ctors(c.Resolve<IService>()));
+            container.RegisterExplicit<IClassWith3Ctors, ClassWith3Ctors>(c => new ClassWith3Ctors(c.Resolve<IService>()));
 
             var resolved = container.Resolve<IClassWith3Ctors>();
             Assert.IsType<ClassWith3Ctors>(resolved);
@@ -1178,7 +1404,7 @@ Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
         public void StaticResolve_ExpressionWithKey_ReturnsInstance()
         {
             DiContainer.Register<IService, MyService>();
-            DiContainer.RegisterExplicit<ClassWith3Ctors,ClassWith3Ctors>(c => new ClassWith3Ctors(DiContainer.Resolve<IService>()), "test");
+            DiContainer.RegisterExplicit<ClassWith3Ctors, ClassWith3Ctors>(c => new ClassWith3Ctors(DiContainer.Resolve<IService>()), "test");
 
             var resolved = DiContainer.Resolve<ClassWith3Ctors>("test");
             Assert.IsType<ClassWith3Ctors>(resolved);
@@ -1189,9 +1415,9 @@ Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
         [Fact]
         public void Resolve_ExpressionWithKey_ReturnsInstance()
         {
-            IDiContainer container = new DiContainer();
+            using var container = new DiContainer();
             container.Register<IService, MyService>();
-            container.RegisterExplicit<ClassWith3Ctors,ClassWith3Ctors>(c => new ClassWith3Ctors(c.Resolve<IService>()), "test");
+            container.RegisterExplicit<ClassWith3Ctors, ClassWith3Ctors>(c => new ClassWith3Ctors(c.Resolve<IService>()), "test");
 
             var resolved = container.Resolve<ClassWith3Ctors>("test");
             Assert.IsType<ClassWith3Ctors>(resolved);
@@ -1201,7 +1427,7 @@ Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
         public void StaticResolve_ExpressionWithResolveTypeWithKey_ReturnsInstance()
         {
             DiContainer.Register<IService, MyService>();
-            DiContainer.RegisterExplicit<IClassWith3Ctors,ClassWith3Ctors>(c => new ClassWith3Ctors(DiContainer.Resolve<IService>()), "test");
+            DiContainer.RegisterExplicit<IClassWith3Ctors, ClassWith3Ctors>(c => new ClassWith3Ctors(DiContainer.Resolve<IService>()), "test");
 
             var resolved = DiContainer.Resolve<IClassWith3Ctors>("test");
             Assert.IsType<ClassWith3Ctors>(resolved);
@@ -1212,9 +1438,9 @@ Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
         [Fact]
         public void Resolve_ExpressionWithResolveTypeWithKey_ReturnsInstance()
         {
-            IDiContainer container = new DiContainer();
+            using var container = new DiContainer();
             container.Register<IService, MyService>();
-            container.RegisterExplicit<IClassWith3Ctors,ClassWith3Ctors>(c => new ClassWith3Ctors(c.Resolve<IService>()), "test");
+            container.RegisterExplicit<IClassWith3Ctors, ClassWith3Ctors>(c => new ClassWith3Ctors(c.Resolve<IService>()), "test");
 
             var resolved = container.Resolve<IClassWith3Ctors>("test");
             Assert.IsType<ClassWith3Ctors>(resolved);
@@ -1238,7 +1464,7 @@ Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
         public void ResolveType_InstanceRegistered_ReturnsInstance()
         {
             var instance = new MyService();
-            IDiContainer container = new DiContainer();
+            using var container = new DiContainer();
             container.RegisterInstance(instance);
             var resolved = container.Resolve(typeof(MyService));
             Assert.Equal(instance, resolved); //exactly same object returned
@@ -1259,7 +1485,7 @@ Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
         public void ResolveTypeWithKey_InstanceRegistered_ReturnsInstance()
         {
             var instance = new MyService();
-            IDiContainer container = new DiContainer();
+            using var container = new DiContainer();
             container.RegisterInstance(instance, "test");
             var resolved = container.Resolve(typeof(MyService), "test");
             Assert.Equal(instance, resolved); //exactly same object returned
@@ -1309,7 +1535,7 @@ Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
         public void Unregister_Registered_IsRemoved()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.Register<ConcreteOnly>();
 
@@ -1339,7 +1565,7 @@ Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
         public void UnregisterWithKey_Registered_IsRemoved()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.Register<ConcreteOnly>("test");
 
@@ -1403,7 +1629,7 @@ Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
         public void UnregisterAll()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.Register<MyService>();
             container.Register<ConcreteOnly>();
@@ -1420,7 +1646,7 @@ Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
         public void Dispose()
         {
             var mock = new ConcurrentDictionary<Tuple<Type, string>, MetaObject>();
-            IDiContainer container = new DiContainer(mock, ContainerOptions.Default);
+            using var container = new DiContainer(mock, ContainerOptions.Default);
 
             container.Register<MyService>();
             container.Register<ConcreteOnly>();
@@ -1431,6 +1657,123 @@ Assert.IsAssignableFrom<IService>(DiContainer.Resolve<IService>());
             container.Dispose();
 
             Assert.Empty(mock);
+        }
+
+        #endregion
+
+        #region ChildContainers
+
+        [Fact]
+        public void NewChildContainer_CreatesNewContainer()
+        {
+            using var container = new DiContainer();
+            var child = container.NewChildContainer();
+
+            Assert.IsAssignableFrom<IDiContainer>(child);
+
+            //Repeat for Static implementation
+            child = DiContainer.NewChildContainer();
+
+            Assert.IsAssignableFrom<IDiContainer>(child);
+        }
+
+        [Fact]
+        public void NewChildContainer_SetsNewContainersParent()
+        {
+            using var container = new DiContainer();
+            var child = container.NewChildContainer();
+
+            Assert.Equal(container, child.GetParent());
+
+            //Repeat for Static implementation
+            child = DiContainer.NewChildContainer();
+            Assert.Equal(DiContainer.Instance, child.GetParent());
+        }
+
+
+        [Fact]
+        public void Parent_ReturnsParentContainer()
+        {
+            using var container = new DiContainer();
+
+            //Cast in order to test IDicontainerExtensions
+            DiContainer child = container.NewChildContainer() as DiContainer;
+
+            Assert.Equal(container, child.GetParent());
+        }
+
+        [Fact]
+        public void NewChildContainer_SetsChild()
+        {
+            using var container = new DiContainer();
+            var child = container.NewChildContainer();
+
+            Assert.Equal(child, container.GetChildren()[0]);
+
+            //Repeat for Static implementation
+            child = DiContainer.NewChildContainer();
+            Assert.Equal(child, DiContainer.GetChildren()[0]);
+
+            DiContainer.Initialize(ContainerOptions.Default); //Reset options to default
+        }
+
+        [Fact]
+        public void NewChildContainer_ContainerOptions_AreGlobal()
+        {
+            ContainerOptions options = new ContainerOptions
+            {
+                TryResolveUnregistered = false
+            };
+            using var container = new DiContainer(options);
+            var child = container.NewChildContainer();
+
+            Assert.False(DiContainer.options.TryResolveUnregistered);
+        }
+
+
+        #endregion
+
+        #region Named Containers
+        [Fact]
+        public void GetContainer_ReturnsNamedContainer()
+        {
+            using var mainContainer = new DiContainer();
+            using var namedContainer = new DiContainer("namedContainer");
+
+            Assert.Equal(namedContainer, mainContainer.GetContainer("namedContainer"));
+
+            //Static implementation
+            Assert.Equal(namedContainer, DiContainer.GetContainer("namedContainer"));
+        }
+
+        [Fact]
+        public void GetContainer_NameWrong_Throws()
+        {
+            using var mainContainer = new DiContainer();
+            using var namedContainer = new DiContainer("namedContainer");
+
+            Assert.Throws<KeyNotFoundException>(() => mainContainer.GetContainer("wrongName"));
+        }
+
+
+        [Fact]
+        public void SetName_RemovesOldNameFromRegister()
+        {
+            using var container = new DiContainer("OldName")
+            {
+                Name = "NewName"
+            };
+
+            Assert.Equal(2, DiContainer.containers.Count);
+            Assert.False(DiContainer.containers.TryGetValue("OldName", out _));
+        }
+
+        [Fact]
+        public void SetName_AlreadyExists_Throws()
+        {
+            using var container = new DiContainer("namedContainer");
+            using var container2 = new DiContainer();
+            Assert.Throws<ArgumentException>(() => container2.Name = "namedContainer");
         }
 
         #endregion
