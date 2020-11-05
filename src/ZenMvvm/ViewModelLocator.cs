@@ -45,7 +45,7 @@ namespace ZenMvvm
         /// </summary>
         public static readonly BindableProperty AutoWireViewModelProperty =
             BindableProperty.CreateAttached("AutoWireViewModel", typeof(bool), typeof(ViewModelLocator), default(bool)
-                , propertyChanged: OnAutoWireViewModelChanged);
+                , propertyChanged: OnWireViewModelChanged);
 
         /// <summary>
         /// Gets the <see cref="AutoWireViewModelProperty"/>
@@ -77,17 +77,6 @@ namespace ZenMvvm
                 WireViewModel(view);
         }
 
-        /// <summary>
-        /// Wires ViewModel if the <see cref="AutoWireViewModelProperty"/> is true
-        /// </summary>
-        private static void OnAutoWireViewModelChanged(BindableObject bindable, object oldValue, object newValue)
-        {
-            if (!(bindable is Element view && (bool)newValue == true))
-                return;
-
-            WireViewModel(view);
-        }
-
         #endregion
 
         #region WireSpecificViewModel
@@ -98,7 +87,7 @@ namespace ZenMvvm
         /// qualified name.
         /// </summary>
         public static readonly BindableProperty WireSpecificViewModelProperty =
-            BindableProperty.CreateAttached("WireSpecificViewModel", typeof(string), typeof(ViewModelLocator), default(string), propertyChanged: OnWireSpecificViewModelChanged);
+            BindableProperty.CreateAttached("WireSpecificViewModel", typeof(string), typeof(ViewModelLocator), default(string), propertyChanged: OnWireViewModelChanged);
 
         /// <summary>
         /// Gets the <see cref="WireSpecificViewModelProperty"/>
@@ -126,18 +115,25 @@ namespace ZenMvvm
         public static void AutoWireViewModel(Page view, string viewModelName)
             => SetWireSpecificViewModel(view, viewModelName);
 
-        private static void OnWireSpecificViewModelChanged(BindableObject bindable, object oldValue, object newValue)
-        {
-            if (!(bindable is Element view && !string.IsNullOrEmpty((string)newValue)))
-                return;
-
-            WireViewModel(view, (string)newValue);
-        }
-
-
         #endregion
 
-        //todo OnWire.... to rule them all
+        /// <summary>
+        /// PropertyChanged delegate that Wires ViewModel to the View
+        /// </summary>
+        /// <param name="bindable">The view</param>
+        /// <param name="oldValue"></param>
+        /// <param name="newValue"></param>
+        private static void OnWireViewModelChanged(BindableObject bindable, object oldValue, object newValue)
+        {
+            if (!(bindable is Element view))
+                return;
+
+            if(newValue is bool boolean && boolean == true)
+                WireViewModel(view);
+
+            if(newValue is string @string)
+                WireViewModel(view, @string);
+        }
 
         internal static void WireViewModel(Element view, string viewModelName = null)
         {
