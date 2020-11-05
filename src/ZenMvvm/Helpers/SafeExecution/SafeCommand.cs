@@ -451,6 +451,8 @@ namespace ZenMvvm.Helpers
         /// </summary>
         public void Execute(object parameter)
         {
+            //parameter is validated for SafeCommand<T> when registering the Expression
+
             if (_execute != null)
                 InternalExecute(parameter);
             else

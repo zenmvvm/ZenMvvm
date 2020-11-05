@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Xunit;
 using ZenMvvm.Helpers;
 using System.Threading.Tasks;
