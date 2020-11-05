@@ -137,30 +137,13 @@ namespace ZenMvvm
 
         #endregion
 
+        //todo OnWire.... to rule them all
 
-        //public static readonly BindableProperty WireSpecificAssemblyQualifiedViewModelProperty =
-        //    BindableProperty.CreateAttached("WireSpecificAssemblyQualifiedViewModel", typeof(string), typeof(ViewModelLocator), default(string), propertyChanged: OnWireSpecificAssemblyQualifiedViewModelChanged);
-
-        //public static string GetWireSpecificAssemblyQualifiedViewModel(BindableObject bindable)
-        //    => (string)bindable.GetValue(WireSpecificAssemblyQualifiedViewModelProperty);
-
-        //public static void SetWireSpecificAssemblyQualifiedViewModel(BindableObject bindable, string value)
-        //    => bindable.SetValue(WireSpecificAssemblyQualifiedViewModelProperty, value);
-
-        //private static void OnWireSpecificAssemblyQualifiedViewModelChanged(BindableObject bindable, object oldValue, object newValue)
-        //{
-        //    if (!(bindable is Element view && !string.IsNullOrEmpty((string)newValue)))
-        //        return;
-
-        //    WireViewModel(view, (string)newValue, isAssemblyQualified:true);
-        //}
         internal static void WireViewModel(Element view, string viewModelName = null)
         {
             var viewType = view.GetType();
 
-            var viewModelType = viewModelName?.Contains(",") ?? false //determine if assembly qualified
-                ? GetViewModelTypeForPage(viewType, viewModelAssemblyQualifiedName: viewModelName)
-                : GetViewModelTypeForPage(viewType, viewModelName);
+            var viewModelType = GetViewModelTypeForPage(viewType, viewModelName);
 
             if (viewModelType is null)
                 throw new ViewModelBindingException(viewType);
@@ -184,14 +167,18 @@ namespace ZenMvvm
             view.BindingContext = viewModel;
         }
 
-        private static Type GetViewModelTypeForPage(Type pageType, string viewModelName = null, string viewModelAssemblyQualifiedName = null)
+        private static Type GetViewModelTypeForPage(Type pageType, string viewModelName = null)
         {
+            // if no name given
+            // -> follow conventions to produce assemblyqualifiedname
             if(string.IsNullOrEmpty(viewModelName))
                 viewModelName = pageType.Name.ReplaceLastOccurrence(
                             NamingConventions.ViewSuffix, NamingConventions.ViewModelSuffix);
 
-            if (string.IsNullOrEmpty(viewModelAssemblyQualifiedName))
-                viewModelAssemblyQualifiedName = string.Format(CultureInfo.InvariantCulture
+            // if name provided but not assembly qualified
+            // -> use namespace conventions to produce assemblyqualifiedname
+            if (!viewModelName.Contains(","))
+                viewModelName = string.Format(CultureInfo.InvariantCulture
                 , "{0}.{1}, {2}"
                 , NamingConventions.ViewModelNamespace ??
                     pageType.Namespace
@@ -199,10 +186,11 @@ namespace ZenMvvm
                 , viewModelName
                 , NamingConventions.ViewModelAssemblyName ?? pageType.GetTypeInfo().Assembly.FullName);
 
-            return Type.GetType(viewModelAssemblyQualifiedName);
+            return Type.GetType(viewModelName);
         }
     }
 
+    //todo hide with internal?
     /// <summary>
     /// Plumbing for Fluent Api
     /// </summary>
