@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace ZenMvvm.Tests.ViewModels
 {
-    public class ImplementsBaseViewModel : IOnViewNavigated<object>, IOnViewRemoved, IOnViewAppearing, IOnViewDisappearing
+    public class ImplementsBaseViewModel : IOnViewNavigatedAsync<object>, IOnViewRemoved, IOnViewAppearing, IOnViewDisappearing
     {
         public ImplementsBaseViewModel()
         {
