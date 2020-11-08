@@ -38,6 +38,13 @@ namespace ZenMvvm
         /// Navigates to a <see cref="Page"/>
         /// </summary>
         /// <param name="state">A URI representing either the current page or a destination for navigation in a Shell application.</param>
+        /// <returns></returns>    
+        Task GoToAsync(ShellNavigationState state);
+
+        /// <summary>
+        /// Navigates to a <see cref="Page"/>
+        /// </summary>
+        /// <param name="state">A URI representing either the current page or a destination for navigation in a Shell application.</param>
         /// <param name="animate"></param>
         /// <returns></returns>
         Task GoToAsync(ShellNavigationState state, bool animate = true);
@@ -49,13 +56,34 @@ namespace ZenMvvm
         /// <param name="navigationData"></param>
         /// <param name="animate"></param>
         /// <returns></returns>
-        Task GoToAsync<T>(ShellNavigationState state, T navigationData, bool animate = true);
+        Task GoToAsync<TData>(ShellNavigationState state, TData navigationData, bool animate = true);
+
+        /// <summary>
+        /// Navigates to a <see cref="Page"/>
+        /// </summary>
+        /// <param name="state">A URI representing either the current page or a destination for navigation in a Shell application.</param>
+        /// <typeparam name="TViewModel">Expected ViewModel Type for the page at the given <paramref name="state"/></typeparam>
+        Task<TViewModel> GoToAsync<TViewModel>(ShellNavigationState state) where TViewModel : class;
+
+        /// <summary>
+        /// Navigates to a <see cref="Page"/>
+        /// </summary>
+        /// <param name="state">A URI representing either the current page or a destination for navigation in a Shell application.</param>
+        /// <param name="animate"></param>
+        /// <typeparam name="TViewModel">Expected ViewModel Type for the page at the given <paramref name="state"/></typeparam>
+        /// <returns></returns>
+        Task<TViewModel> GoToAsync<TViewModel>(ShellNavigationState state, bool animate = true) where TViewModel : class;
 
         /// <summary>
         /// Navigates to a <see cref="Page"/> passing data to the target ViewModel
         /// </summary>
         /// <param name="state"></param>
-        Task GoToAsync(ShellNavigationState state);
+        /// <param name="navigationData"></param>
+        /// <param name="animate"></param>
+        /// <typeparam name="TViewModel">Expected ViewModel Type for the page at the given <paramref name="state"/></typeparam>
+        /// <returns></returns>
+        Task<TViewModel> GoToAsync<TViewModel, TData>(ShellNavigationState state, TData navigationData, bool animate = true) where TViewModel : class;
+
 
         /// <summary>
         /// Pops a <see cref="Page"/> off the <see cref="NavigationStack"/>
@@ -85,7 +113,7 @@ namespace ZenMvvm
         /// <param name="navigationData">Object that will be recieved by the <see cref="IOnViewNavigatedAsync.OnViewNavigatedAsync(object)"/> method</param>
         /// <param name="animated"></param>
         /// <returns></returns>
-        Task<TViewModel> PushAsync<TViewModel,T>(T navigationData, bool animated = true) where TViewModel : class, IOnViewNavigatedGroup<T>;
+        Task<TViewModel> PushAsync<TViewModel,TData>(TData navigationData, bool animated = true) where TViewModel : class, IOnViewNavigatedGroup<TData>;
 
         /// <summary>
         /// Pushes a <see cref="Page"/> onto the <see cref="NavigationStack"/>
@@ -102,7 +130,7 @@ namespace ZenMvvm
         /// <param name="navigationData">Object that will be recieved by the <see cref="IOnViewNavigatedAsync.OnViewNavigatedAsync(object)"/> method</param>
         /// <param name="animated"></param>
         /// <returns></returns>
-        Task<TViewModel> PushModalAsync<TViewModel,T>(T navigationData, bool animated = true) where TViewModel : class, IOnViewNavigatedGroup<T>;
+        Task<TViewModel> PushModalAsync<TViewModel,TData>(TData navigationData, bool animated = true) where TViewModel : class, IOnViewNavigatedGroup<TData>;
 
         /// <summary>
         /// Pushes a <see cref="Page"/> onto the <see cref="ModalStack"/>

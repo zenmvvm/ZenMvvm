@@ -74,32 +74,44 @@ namespace ZenMvvm
 
         #endregion
         #region CONSTRUCTIVE
-        //todo should also return viewModel
-        /// <summary>
-        /// Navigates to a <see cref="Page"/>
-        /// </summary>
-        /// <param name="state">A URI representing either the current page or a destination for navigation in a Shell application.</param>
-        /// <param name="animate"></param>
-        /// <returns></returns>
+        ///<inheritdoc/>
+        public Task GoToAsync(ShellNavigationState state)        
+            => GoToAsync<object>(state, true);
+        ///<inheritdoc/>
+        public Task<TViewModel> GoToAsync<TViewModel>(ShellNavigationState state) where TViewModel : class
+            => GoToAsync<TViewModel>(state, true);
+        
+
+        ///<inheritdoc/>
         public Task GoToAsync(ShellNavigationState state, bool animate = true)
+            => GoToAsync<object>(state, animate);            
+        ///<inheritdoc/>
+        public async Task<TViewModel> GoToAsync<TViewModel>(ShellNavigationState state, bool animate = true) where TViewModel : class
         {
-            return InternalGoToAsync(state, animate);            
+            if (await InternalGoToAsync(state, animate).ConfigureAwait(false) is TViewModel viewModel)
+                return viewModel;
+            else
+                throw new ArgumentException(
+                    $"The ViewModel for the page at route {state} is not of type {typeof(TViewModel).Name}");
         }
 
-        /// <summary>
-        /// Navigates to a <see cref="Page"/> passing data to the target ViewModel
-        /// </summary>
-        /// <param name="state"></param>
-        /// <param name="navigationData"></param>
-        /// <param name="animate"></param>
-        /// <returns></returns>
+        ///<inheritdoc/>
         public async Task GoToAsync<TData>(ShellNavigationState state, TData navigationData, bool animate = true)
+            => await GoToAsync<object, TData>(state, navigationData, animate);
+        ///<inheritdoc/>
+        public async Task<TViewModel> GoToAsync<TViewModel, TData>(ShellNavigationState state, TData navigationData, bool animate = true) where TViewModel : class
         {
-            var viewModel = await InternalGoToAsync(state, animate).ConfigureAwait(false);
-            await RunOnNavigatedsWithDataAsync<TData>(viewModel, navigationData).ConfigureAwait(false);
+            if (await InternalGoToAsync(state, animate).ConfigureAwait(false) is TViewModel viewModel)
+            {
+                await RunOnNavigatedsWithDataAsync<TData>(viewModel, navigationData).ConfigureAwait(false);
+                return viewModel;
+            }
+            else
+                throw new ArgumentException(
+                    $"The ViewModel for the page at route {state} is not of type {typeof(TViewModel).Name}");
         }
 
-        private Task<object> InternalGoToAsync(ShellNavigationState state, bool animate = true)
+            private Task<object> InternalGoToAsync(ShellNavigationState state, bool animate = true)
         {
             var isPushed = new TaskCompletionSource<object>();
             Device.BeginInvokeOnMainThread(async () =>
@@ -145,14 +157,6 @@ namespace ZenMvvm
                 (viewModel as IOnViewNavigated<T>).OnViewNavigated(data);
         }
 
-        /// <summary>
-        /// Navigates to a <see cref="Page"/> passing data to the target ViewModel
-        /// </summary>
-        /// <param name="state"></param>
-        public Task GoToAsync(ShellNavigationState state)
-        {
-            return GoToAsync(state, true);
-        }
 
         /// <summary>
         /// Pushes a <see cref="Page"/> onto the <see cref="NavigationStack"/>
