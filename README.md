@@ -1,17 +1,30 @@
-# ![Logo](XamarinFormsMvvmAdaptor/Art/icon.png) ZenMVVM
-Lightweight **ViewModel-First MVVM** framework for Xamarin.Forms
+# ![Logo](src/ZenMvvm/Art/icon.png) ZenMVVM
+Lightweight **ViewModel-First** MVVM framework for Xamarin.Forms
 
-[![NuGet](https://buildstats.info/nuget/XamarinFormsMvvmAdaptor?includePreReleases=true)](https://www.nuget.org/packages/XamarinFormsMvvmAdaptor/)  ![Coverage](https://img.shields.io/azure-devops/coverage/guy-antoine/xamarin-forms-mvvm-adaptor/2?label=Coverage)
+*See the [ZenMvvm Sample App](https://github.com/z33bs/ZenMvvm-Sample-App#readme) and [Zenimals Sample App](https://github.com/z33bs/Zenimals-Sample-App#readme) for ZenMvvm in action*
 
 
 
-[TOC]
+#### **Contents**
+
+- [Why ZenMvvm?](#Why-ZenMvvm?)
+- [Mvvm Quickstart](#Mvvm-Quickstart) 
+- [Dependency Injection QuickStart](#Dependency-Injection-QuickStart)
+- [Helpers Quickstart](#Helpers-Quickstart)
+  - [Safe Execution](#Safe-Execution)
+  - [ViewModelBase](#ViewModelBase)
+  - [ObservableRangeCollection](#ObservableRangeCollection)
+  - [Grouping](#Grouping)
+  - [WeakEvents](#WeakEvents)
+- [Unit Testing Quickstart](#Unit-Testing-Quickstart)
+
+
 
 ## Why ZenMvvm?
 
 **More readable and maintainable code**
 
-Xamarin has Mvvm functionality, however its pattern favours View-First navigation and doesn't incorporate dependency injection. With **ZenMvvm** you can use a ViewModel-First pattern while keeping the power and familiarity of Xamarin Forms. ViewModel-First lets you place all functional code in the ViewModels, leaving your `.xaml.cs` code-behind files empty. The result? More readable and maintainable code, and a stronger separation of concerns.
+Xamarin has Mvvm functionality, however it uses View-First navigation and doesn't incorporate dependency injection. With **ZenMvvm** you can use a ViewModel-First pattern while keeping the power and familiarity of Xamarin Forms. ViewModel-First lets you place all functional code in the ViewModels, leaving your `.xaml.cs` code-behind files empty. The result? More readable and maintainable code, and a stronger separation of concerns.
 
 **Minimal overhead**
 
@@ -19,7 +32,7 @@ ZenMVVM is lightweight because it uses Xamarin's own Mvvm engine to achieve View
 
 **Reduce boilerplate code**
 
-Optional `ZenMvvm.Helpers` save you from writing boilerplate code. The SafeExecution Helpers rewrite `Xamarin.Forms.Command` and `Xamarin.Forms.MessagingCenter` so that they always handle exceptions and remove the need to write try-catch-finally blocks and default exception handling. Similar helpers are provided for invoking Actions, and executing Tasks safely. Other commonly used helpers are bundled-in for convenience.
+Optional `ZenMvvm.Helpers` save you from writing boilerplate code. The SafeExecution Helpers rewrite `Xamarin.Forms.Command` and `Xamarin.Forms.MessagingCenter` so that they always handle exceptions and remove the need to write try-catch blocks and default exception handling. Similar helpers are provided for invoking Actions, and executing Tasks safely. Other commonly used helpers are bundled-in for convenience.
 
 **Improve performance**
 
@@ -34,7 +47,7 @@ ZenMvvm is built with ViewModel Unit Testing in mind. Your ViewModels won't depe
 **Features:**
 
 * Embraces Xamarin.Forms Shell applications
-* Uses familiar syntax, e.g. `PushAsync<TViewModel>()` is similar to Xamarin's `PushAsync(Page page)`. You can also navigate with `GotoAsync`.
+* Uses familiar syntax, e.g. `PushAsync<TViewModel>()` is similar to Xamarin's `PushAsync(Page page)`. You can also use route navigation with `GotoAsync`.
 * Effortlessly pass data to the pushed view-model with `PushAsync<TViewModel>(object navigationData)` and `GotoAsync(route, navigationData)`
 * Navigation events can be handled in the ViewModel with `OnViewAppearing`, `OnViewDisappearing`, `OnViewNavigated`, and `OnViewRemoved` methods.
 * Provides fast built-in dependency injection. Alternatively, the user can elect to run ZenMvvm with their own DI engine of choice (e.g. Autofac or LightInject).
@@ -118,9 +131,9 @@ If you follow the naming conventions, simple use `AutoWireViewModel` in the xaml
 
 ```
 
-If you want to bind a ViewModel that doesn't follow the naming conventions, use `WireSpecificViewModel`. If you just type the ViewModel's name, it will assume that the ViewModel is located in the default ViewModel namespace. If you specify an assembly qualified name, you can reference a ViewModel in any namespace.
+If you want to bind a ViewModel that doesn't follow the naming conventions, use `WireSpecificViewModel`. 
 
-
+> Using `WireSpecificViewModel`: If you just type the ViewModel's name, it will assume that the ViewModel is located in the default ViewModel namespace. If you specify an assembly qualified name, you can reference a ViewModel in any namespace.
 
 ```xaml
 <?xml version="1.0" encoding="utf-8"?>
@@ -137,9 +150,9 @@ If you want to bind a ViewModel that doesn't follow the naming conventions, use 
 
 
 
-### Pass INavigationService to the ViewModel's constructor 
+### Perform Navigation
 
-Only required if your ViewModel needs to control page navigation:
+In order to Navigate, pass INavigationService to the ViewModel's constructor. This is only required if your ViewModel needs to control page navigation:
 
 ```c#
 using ZenMvvm;
@@ -158,9 +171,9 @@ namespace SampleApp.ViewModels
 //...
 ```
 
-​	
+Now you can...
 
-**Push a page onto the `NavigationService.NavigationStack`:**
+**Push a page onto the `NavigationStack`:**
 
 ```c#
 AddItemCommand = new Command(async () =>
@@ -170,7 +183,7 @@ AddItemCommand = new Command(async () =>
   }
 ```
 
-**Navigate using routes:**
+**Navigate using [routes](https://docs.microsoft.com/en-us/xamarin/xamarin-forms/app-fundamentals/shell/navigation#routes):**
 
 ```c#
 AddItemCommand = new Command(async () =>
@@ -204,36 +217,41 @@ OnItemSelectedCommand = new Command(async () =>
   }
 ```
 
-The recieving ViewModel must implement `IOnViewNavigated<T>` to accept the data:
+The recieving ViewModel must implement `IOnViewNavigated<T>` to recieve the data:
 
 ```c#
 public class ItemDetailViewModel : IOnViewNavigated<Item>
 {
   	//...
   
-    public Task OnViewNavigatedAsync(Item item)
+    public void OnViewNavigated(Item item)
     {        
       //Do something with item
       //...   
-      return Task.CompletedTask;
     }
 }
 ```
 
 
 
-The following events are supported and implemented in the same way (buy implementing the relevant interface):
+### Automatically Run ViewModel code when events are triggered
+
+The following events are supported by having the ViewModel implement the relevant interface:
 
 * `OnViewAppearing` is called when the bound view appears
 * `OnViewDisappearing` is called when the bound view disappears
 * `OnViewRemoved` is called when the bound view is popped from the `NavigationStack`
-* `OnViewNavigated` (example above) is called when the bound view is pushed on the `NavigationStack`
+* `OnViewNavigated` overloads are called as soon as navigation has been completed
+  * `OnViewNavigated`
+  * `Task OnViewNavigatedAsync`
+  * `OnViewNavigated<TData>` (example above) 
+  * `Task OnViewNavigatedAsync<TData>`
 
 
 
 ## Dependency Injection QuickStart
 
-ZenMvvm's uses a fast, powerful built-in dependency injection engine. The engine is so good that it's been unbundled into a standalone package, [SmartDi](https://github.com/z33bs/SmartDi). Refer to it's [Readme](https://github.com/z33bs/SmartDi#readme), and [Wiki](https://github.com/z33bs/SmartDi/wiki) for detailed documentation.
+ZenMvvm has a fast, powerful, built-in dependency injection engine. The engine is so good that it's been unbundled into a standalone package, [SmartDi](https://github.com/z33bs/SmartDi). Refer to it's [Readme](https://github.com/z33bs/SmartDi#readme), and [Wiki](https://github.com/z33bs/SmartDi/wiki) for detailed documentation.
 
 The DI is user friendly, allowing you to resolve dependencies without registering them (see [SmartResolve](https://github.com/z33bs/SmartDi/wiki/Resolution#smart-resolve)). This is great for rapid-prototyping and simple applications. 
 
@@ -244,7 +262,7 @@ The DI is user friendly, allowing you to resolve dependencies without registerin
 
 
 
-Using the dependency is as simple as:
+Consuming the dependency is as simple as:
 
 ```c#
 //...
@@ -293,7 +311,7 @@ DiContainer.Initialize(o => o.TryResolveUnregistered = false);
 
 
 
-You might prefer to use a 3rd-party DI engine. ZenMvvm makes this easy by simply setting `ViewModelLocator.ContainerImplementation` to something that implements the `IIoc` interface. To make this easy ZenMvvm provides the `IocAdapter` class which is a dynamic implementation of the Adapter pattern. The code below refactors `App.cs` to use [Autofac](https://autofac.org):
+You might prefer to use a 3rd-party DI engine. ZenMvvm makes this easy by allowing you to set `ViewModelLocator.ContainerImplementation` to something that implements the `IIoc` interface. ZenMvvm provides a dynamic implementation of the Adapter pattern, the `IocAdapter` class, to assist in this regard. The code below refactors `App.cs` to use [Autofac](https://autofac.org):
 
 ```c#
 //...
@@ -328,12 +346,15 @@ ViewModelLocator.ContainerImplementation = new IocAdapter(
 
 
 
-> :memo:If the provided "dynamic" `IocAdapter` doesn't work for the custom DI engine, one can write their own Adapter that implements the `IIoc` interface.
+> :memo:If the  `IocAdapter` helper doesn't work for your chosen DI engine, you can write your own Adapter that implements the `IIoc` interface.
 >
 
 
 
 ## Helpers Quickstart
+> Gratitude goes to [James Montemagno](https://github.com/jamesmontemagno), [John Thieret](https://johnthiriet.com), [Brandon Minnick](https://github.com/brminnick), and the [Xamarin Team](https://github.com/xamarin). This collection of helpers is inspired by, and builds on their work.
+
+
 
 `ZenMvvm.Helpers` is an integrated collection of helpers that:
 
@@ -379,7 +400,7 @@ LoadItemsCommand = new Command(async () =>
 });
 ```
 
-... with the **added benefit** that  `dataStore.GetItemsAsync(true)` is executed immediately on the background thread. If you put a breakpoint on the verbose code above, you will see that it begins executing `GetItemsAsync(true)` on the Main Thread. If you don't use `ConfigureAwait(false)` constently in the implementation of `GetItemsAsync`, the UI thread could be blocked for a meaningful ammount of time.
+... with the **added benefit** that  `dataStore.GetItemsAsync(true)` is executed immediately on the background thread. If you put a breakpoint on the verbose code above, you will see that it begins executing `GetItemsAsync(true)` on the Main Thread. If you don't use `ConfigureAwait(false)` constently in the implementation of `GetItemsAsync`, the UI thread could be blocked for a meaningful amount of time.
 
 The above example, used `SafeCommand` integrated with `ViewModelBase` and James Montemagno's `ObservableRangeCollection` to significantly reduce boilerplate code.
 
@@ -497,7 +518,7 @@ ZenMvvm.Helpers includes a minimalist `ViewModelBase` that implements the method
 If the user wishes to roll a custom base ViewModel, we recommend making use of the components offered in this library. An example...
 
 ```c#
-public abstract class ViewModelBase : ObservableObject, IsBusyAware
+public abstract class BaseViewModel : ObservableObject, IsBusyAware
 {
     string statusMessage = string.Empty;
     /// <summary>
@@ -506,8 +527,8 @@ public abstract class ViewModelBase : ObservableObject, IsBusyAware
     /// <value>The message.</value>
     public string StatusMessage
     {
-        get => title;
-        set => SetProperty(ref title, value);
+        get => statusMessage;
+        set => SetProperty(ref statusMessage, value);
     }
 }
 ```
@@ -611,85 +632,6 @@ If you want your `OnSomeEvent` handler to execute on the main thread, use `.Hand
 
 Dependency injection facilitates easy Unit Testing of your viewmodels. Furthermore, if the developer chooses to use `ZenMvvm.Helpers`, the ViewModel shouldn't depend on Xamarin.Forms, making testing easier.
 
-Refer to ZenMvvmSampleApp for an example of ViewModel unit-testing with `XUnit` and `Moq`. The extract below shows how the following is tested:
-
-* Page navigation
-* CollectionChanged event
-* MessagingCenter Subscription
-
-```c#
-public class ItemsViewModelTests
-{
-    readonly Mock<IDataStore<Item>> mockDataStore;
-    readonly Item item;
-
-    public ItemsViewModelTests()
-    {
-        item = new Item { Id = "1", Text = "Item1", Description = "This is Item1" };
-
-        mockDataStore = new Mock<IDataStore<Item>>();
-        mockDataStore.Setup(o => o.GetItemsAsync(true))
-            .ReturnsAsync(new List<Item>{item});
-    }
-
-    [Fact]
-    public void AddItemCommand_Executed_NavigatesToNewItemViewModel()
-    {
-        var mockNavigation = new Mock<INavigationService>();
-        mockNavigation.Setup(
-            o => o.PushAsync<NewItemViewModel>(null, true)).Verifiable();
-
-        var vm = new ItemsViewModel(
-            mockNavigation.Object,
-            new Mock<IDataStore<Item>>().Object,
-            new Mock<IMessagingCenter>().Object);
-
-        vm.AddItemCommand.Execute(null);
-
-        Mock.Verify(new Mock[]{ mockNavigation});
-    }
-
-    [Fact]
-    public void ItemsProperty_LoadItemsCommandExecuted_RaisesCollectionChanged()
-    {
-        bool invoked = false;
-        var vm = new ItemsViewModel(
-            new Mock<INavigationService>().Object,
-            mockDataStore.Object,
-            new Mock<IMessagingCenter>().Object);
-        var test = new ObservableRangeCollection<Item>();
-
-        vm.Items.CollectionChanged += (sender, e) =>
-        {
-            if(e.Action == NotifyCollectionChangedAction.Reset
-                && (((ObservableRangeCollection<Item>)sender).Count == 1))
-                    invoked = true;
-        };
-
-        vm.LoadItemsCommand.Execute(null);
-        Assert.True(invoked);
-    }
-
-    [Fact]
-    public void ItemsViewModel_Constructed_MessagingCenterSubscribeToAddItem()
-    {
-        var messagingCenter = new Mock<IMessagingCenter>();
-        var callback = It.IsAny<Action<NewItemViewModel, Item>>();
-        messagingCenter.Setup(o => o.Subscribe(
-                It.IsAny<ItemsViewModel>(),
-                "AddItem",
-                It.IsAny<Action<NewItemViewModel, Item>>(), null)
-            ).Verifiable();
-
-        var vm = new ItemsViewModel(
-            new Mock<INavigationService>().Object,
-            new Mock<IDataStore<Item>>().Object,
-            messagingCenter.Object);
-
-        messagingCenter.VerifyAll();
-    }
-```
-
-
+Refer to [ZenMvvmSampleApp](https://github.com/z33bs/ZenMvvm-Sample-App/blob/master/ZenMvvmSampleApp.UnitTests/ItemsViewModelTests.cs) for an example of ViewModel unit-testing with `XUnit` and `Moq`.
 
  
