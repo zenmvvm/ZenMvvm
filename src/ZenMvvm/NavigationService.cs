@@ -103,7 +103,7 @@ namespace ZenMvvm
                     var viewModel = (Shell.Current?.CurrentItem?.CurrentItem as IShellSectionController)?
                         .PresentedPage
                         .BindingContext;
-                    await RunOnNavigatedsAsync(viewModel);
+                    await RunOnNavigatedsAsync(viewModel).ConfigureAwait(false);
                     isPushed.SetResult(viewModel);
                 }
                 catch (Exception ex)
