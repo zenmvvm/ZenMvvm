@@ -22,7 +22,7 @@ namespace ZenMvvm
         /// <summary>
         /// Dependency injection container
         /// </summary>
-        private static IIoc Ioc => ContainerImplementation;
+        internal static IIoc Ioc => ContainerImplementation;
 
         /// <summary>
         /// Revert to default IIoc

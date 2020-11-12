@@ -24,6 +24,11 @@ namespace ZenMvvm
     public class NavigationService : INavigationService
     {
         /// <summary>
+        /// Navigation settings
+        /// </summary>
+        internal static readonly NavigationSettings settings = new NavigationSettings(); //field initialized before ctor
+
+        /// <summary>
         /// Returns Xamarin.Forms.Shell.Current
         /// </summary>
         public Shell CurrentShell => Shell.Current;
@@ -33,12 +38,32 @@ namespace ZenMvvm
         INavigation Navigation => navigation ?? CurrentShell.Navigation;
 
         /// <summary>
-        /// Default Constructor
+        /// reates a new instance of the NavigationService
         /// </summary>
         [ResolveUsing]
         public NavigationService()
         {
             //navigation = Shell.Current.Navigation;
+        }
+
+        /// <summary>
+        /// Creates a new instance of the NavigationService with the specified
+        /// <see cref="NavigationSettings"/>
+        /// </summary>
+        /// <param name="navigationSettings"></param>
+        public NavigationService(Action<NavigationSettings> navigationSettings)
+        {
+            navigationSettings(settings);
+        }
+
+        /// <summary>
+        /// Creates a new instance of the NavigationService with the specified
+        /// <see cref="NavigationSettings"/>
+        /// </summary>
+        /// <param name="navigationSettings"></param>
+        public NavigationService(NavigationSettings navigationSettings)
+            : this(s => s.ShouldResolveViews = navigationSettings.ShouldResolveViews)
+        {
         }
 
         /// <summary>
@@ -203,8 +228,11 @@ namespace ZenMvvm
             bool isModal)
             where TViewModel : class
         {
-            var page = Activator.CreateInstance(
-                    GetPageTypeForViewModel<TViewModel>()) as Page;
+            var page = (settings.ShouldResolveViews
+                ? ViewModelLocator.Ioc.Resolve(GetPageTypeForViewModel<TViewModel>())
+                : Activator.CreateInstance(
+                    GetPageTypeForViewModel<TViewModel>())
+                ) as Page;
 
             var isPushed = new TaskCompletionSource<TViewModel>();
             Device.BeginInvokeOnMainThread(async () =>
