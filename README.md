@@ -152,6 +152,8 @@ If you want to bind a ViewModel that doesn't follow the naming conventions, use 
 
 ### Perform Navigation
 
+The navigation syntax is exactly the same as Xamarin.Forms, with the difference being that its ViewModel first. Refer to Xamarin's documentation for more information. One can use two different styles of navigation: [routes](https://docs.microsoft.com/en-us/xamarin/xamarin-forms/app-fundamentals/shell/navigation#routes) (`GotoAsync`),  and/or [hierarchical navigation](https://docs.microsoft.com/en-us/xamarin/xamarin-forms/app-fundamentals/navigation/hierarchical) (`PushAsync`).
+
 In order to Navigate, pass INavigationService to the ViewModel's constructor. This is only required if your ViewModel needs to control page navigation:
 
 ```c#
@@ -251,9 +253,15 @@ The following events are supported by having the ViewModel implement the relevan
 
 ## Dependency Injection QuickStart
 
-ZenMvvm has a fast, powerful, built-in dependency injection engine. The engine is so good that it's been unbundled into a standalone package, [SmartDi](https://github.com/z33bs/SmartDi). Refer to it's [Readme](https://github.com/z33bs/SmartDi#readme), and [Wiki](https://github.com/z33bs/SmartDi/wiki) for detailed documentation.
+ZenMvvm uses dependency injection to resolve ViewModels before binding to their respective views. ZenMvvm can also use dependency injection with the Views [if desired](#Injecting-dependencies-into-Views).
 
-The DI is user friendly, allowing you to resolve dependencies without registering them (see [SmartResolve](https://github.com/z33bs/SmartDi/wiki/Resolution#smart-resolve)). This is great for rapid-prototyping and simple applications. 
+The built-in dependency injection engine is fast and powerful, and has been unbundled into a standalone package, [SmartDi](https://github.com/z33bs/SmartDi). Refer to it's [Readme](https://github.com/z33bs/SmartDi#readme), and [Wiki](https://github.com/z33bs/SmartDi/wiki) for detailed documentation. However, one can easily use a 3rd party engine [if prefered](#Using-3rd-Party-dependency-injection-/-IOC).
+
+> SmartDi strikes a balance between offering rich features while still performing reasonably fast. [Benchmarks](https://danielpalme.github.io/IocPerformance/) put it solidly in the middle of the pack in terms of speed. 
+
+
+
+The built-in DI is user friendly, allowing you to resolve dependencies without registering them (see [SmartResolve](https://github.com/z33bs/SmartDi/wiki/Resolution#smart-resolve)). This is great for rapid-prototyping and simple applications. 
 
 >If using ZenMvvm in this way, take note of the default behaviour:
 >
@@ -309,7 +317,87 @@ If you want ZenMvvm to throw a `ResolveException` when a dependency is not regis
 DiContainer.Initialize(o => o.TryResolveUnregistered = false);
 ```
 
+### Injecting dependencies into Views
 
+By default, ZenMvvm expects the views to have parameterless constructors. It creates a new instance of the view, and doesn't expect views to be registered as dependencies.
+
+If you prefer to incorporate dependencies into some of your views, you will want to resolve the views using the DI engine. This can be achieved by changing the NavigationService settings. When doing so, take note of the following:
+
+* Hierarchical navigation with the `Push` methods will resolve the pushed view using DI.
+* A pattern needs to be used to ensure that views are resolved using DI for the Shell Visual Hierarchy.
+* Navigating with `GotoAsync` to a route that is NOT in the Shell visual hierarchy requires special Route Registration for the View to be resolved as a dependency.
+
+The suggested pattern is as follows...
+
+*In your AppShell.xaml.cs*
+
+```c#
+public partial class AppShell : Shell
+{
+   //Bindable properties for use in the ContentTemplate of ShellContent
+   // in the xaml
+    public DataTemplate Tab1 { get; }
+    public DataTemplate Tab2 { get; }
+    public DataTemplate Tab3 { get; }
+
+  	//Pages will be injected into AppShell
+    public AppShell(
+        Tab1Page tab1,
+        Tab1Page tab1,
+        Tab1Page tab1)
+    {
+       //Assign before InitializeComponent();
+        Tab1 = new DataTemplate(() => tab1);
+        Tab2 = new DataTemplate(() => tab2);
+        Tab3 = new DataTemplate(() => tab3);
+
+        InitializeComponent();
+      
+        //Use ZenMvvm's ResolverRouteFactory to register routes
+        // that are not part of the Shell Visual Hierarchy
+        Routing.RegisterRoute(
+          "detailspage", 
+          new ResolverRouteFactory<DetailPage>());
+    }
+```
+
+*Now in your AppShell.xaml*
+
+```xaml
+<Shell ...>
+    <TabBar>
+        <Tab Title="Tab1" Icon="tab1.png">
+            <ShellContent ContentTemplate="{Binding Tab1}" />
+        </Tab>
+        <Tab Title="Tab2" Icon="tab2.png">
+            <ShellContent ContentTemplate="{Binding Tab2}" />
+        </Tab>
+        <Tab Title="Tab3" Icon="tab3.png">
+            <ShellContent ContentTemplate="{Binding Tab3}" />
+        </Tab>
+    </TabBar>
+</Shell>
+```
+
+*In your app.xaml.cs:*
+
+```c#
+public partial class App : Application
+{
+  public App()
+  {
+	  InitializeComponent();
+
+  	//Register dependencies if you don't want to use Smart Resolve
+
+  	MainPage = DiContainer.Resolve<AppShell>();
+  }
+}
+```
+
+All views will now be created by the DI engine. Also, all navigation with GotoAsync and PushAsync will resolve views from the DI engine.
+
+### Using 3rd Party dependency injection / IOC
 
 You might prefer to use a 3rd-party DI engine. ZenMvvm makes this easy by allowing you to set `ViewModelLocator.ContainerImplementation` to something that implements the `IIoc` interface. ZenMvvm provides a dynamic implementation of the Adapter pattern, the `IocAdapter` class, to assist in this regard. The code below refactors `App.cs` to use [Autofac](https://autofac.org):
 
