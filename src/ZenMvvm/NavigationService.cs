@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using Xamarin.Forms;
 using ZenMvvm.Helpers;
@@ -24,8 +23,6 @@ namespace ZenMvvm
     /// </summary>
     public class NavigationService : INavigationService
     {
-        private readonly SemaphoreSlim readLock = new SemaphoreSlim(1, 1);
-
         /// <summary>
         /// Returns Xamarin.Forms.Shell.Current
         /// </summary>
@@ -91,7 +88,7 @@ namespace ZenMvvm
         public async Task<object> GoToAsync<TData>(ShellNavigationState state, TData navigationData, bool animate = true)
         {
             var viewModel = await InternalGoToAsync(state, animate).ConfigureAwait(false);
-            await CheckAndRunOnNavigatedsAsync<TData>(viewModel, navigationData).ConfigureAwait(false);
+            await RunOnNavigatedsWithDataAsync<TData>(viewModel, navigationData).ConfigureAwait(false);
             return viewModel;
         }
 
@@ -106,8 +103,7 @@ namespace ZenMvvm
                     var viewModel = (Shell.Current?.CurrentItem?.CurrentItem as IShellSectionController)?
                         .PresentedPage
                         .BindingContext;
-
-                    await CheckAndRunImplementedMethodsAsync(viewModel);
+                    await RunOnNavigatedsAsync(viewModel);
                     isPushed.SetResult(viewModel);
                 }
                 catch (Exception ex)
@@ -119,25 +115,16 @@ namespace ZenMvvm
             return isPushed.Task;
         }
 
-        private async Task CheckAndRunImplementedMethodsAsync(object viewModel)
+        private async Task RunOnNavigatedsAsync(object viewModel)
         {
-            if (viewModel is IInitializeAsync initializeable)
-                if(!initializeable.IsInitialized)
-                {
-                    await readLock.WaitAsync();
-                    await initializeable.InitializeAsync().ConfigureAwait(false);
-                    initializeable.IsInitialized = true;
-                    readLock.Release();
-                }                
+            if (viewModel is IOnViewNavigatedAsync)
+                await (viewModel as IOnViewNavigatedAsync).OnViewNavigatedAsync().ConfigureAwait(false);
+            if (viewModel is IOnViewNavigated)
+                (viewModel as IOnViewNavigated).OnViewNavigated();
 
-            if (viewModel is IOnViewNavigatedAsync onNavigatedAsync)
-                await onNavigatedAsync.OnViewNavigatedAsync().ConfigureAwait(false);
-
-            if (viewModel is IOnViewNavigated onNavigated)
-                onNavigated.OnViewNavigated();
         }
 
-        private async Task CheckAndRunOnNavigatedsAsync<T>(object viewModel, T data)
+        private async Task RunOnNavigatedsWithDataAsync<T>(object viewModel, T data)
         {
             //data can be null
 
@@ -145,11 +132,10 @@ namespace ZenMvvm
                 throw new ArgumentException($"You are trying to pass {nameof(T)}"
                     + $" to a ViewModel that doesn't implement {nameof(IOnViewNavigatedAsync<T>)}");
 
-            if (viewModel is IOnViewNavigatedAsync<T> onNavigatedAsync)
-                await onNavigatedAsync.OnViewNavigatedAsync(data).ConfigureAwait(false);
-
-            if (viewModel is IOnViewNavigated<T> onNavigated)
-                onNavigated.OnViewNavigated(data);
+            if (viewModel is IOnViewNavigatedAsync<T>)
+                await (viewModel as IOnViewNavigatedAsync<T>).OnViewNavigatedAsync(data).ConfigureAwait(false);
+            if (viewModel is IOnViewNavigated<T>)
+                (viewModel as IOnViewNavigated<T>).OnViewNavigated(data);
         }
 
 
@@ -165,7 +151,7 @@ namespace ZenMvvm
             where TViewModel : class, IOnViewNavigatedGroup<TData>
         {
             var viewModel = await InternalPushAsync<TViewModel>(animated, isModal: false).ConfigureAwait(false);
-            await CheckAndRunOnNavigatedsAsync<TData>(viewModel, navigationData).ConfigureAwait(false);
+            await RunOnNavigatedsWithDataAsync<TData>(viewModel, navigationData).ConfigureAwait(false);
             return viewModel; //can be null if no viewModel resolved
         }
 
@@ -195,7 +181,7 @@ namespace ZenMvvm
             where TViewModel : class, IOnViewNavigatedGroup<TData>
         {
             var viewModel = await InternalPushAsync<TViewModel>(animated, isModal: true).ConfigureAwait(false);
-            await CheckAndRunOnNavigatedsAsync<TData>(viewModel, navigationData).ConfigureAwait(false);
+            await RunOnNavigatedsWithDataAsync<TData>(viewModel, navigationData).ConfigureAwait(false);
             return viewModel;
         }
 
@@ -233,7 +219,7 @@ namespace ZenMvvm
 
                     var viewModel = page.BindingContext as TViewModel;
 
-                    await CheckAndRunImplementedMethodsAsync(viewModel).ConfigureAwait(false);
+                    await RunOnNavigatedsAsync(viewModel).ConfigureAwait(false);
                     isPushed.SetResult(viewModel);
                 }
                 catch (Exception ex)
