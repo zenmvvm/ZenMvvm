@@ -38,16 +38,16 @@ namespace ZenMvvm
         /// Navigates to a <see cref="Page"/>
         /// </summary>
         /// <param name="state">A URI representing either the current page or a destination for navigation in a Shell application.</param>
-        /// <returns></returns>    
-        Task GoToAsync(ShellNavigationState state);
+        /// <returns>Expected ViewModel Type for the page at the given <paramref name="state"/></returns>
+        Task<object> GoToAsync(ShellNavigationState state);
 
         /// <summary>
         /// Navigates to a <see cref="Page"/>
         /// </summary>
         /// <param name="state">A URI representing either the current page or a destination for navigation in a Shell application.</param>
         /// <param name="animate"></param>
-        /// <returns></returns>
-        Task GoToAsync(ShellNavigationState state, bool animate = true);
+        /// <returns>Expected ViewModel Type for the page at the given <paramref name="state"/></returns>
+        Task<object> GoToAsync(ShellNavigationState state, bool animate = true);
 
         /// <summary>
         /// Navigates to a <see cref="Page"/> passing data to the target ViewModel
@@ -55,34 +55,8 @@ namespace ZenMvvm
         /// <param name="state"></param>
         /// <param name="navigationData"></param>
         /// <param name="animate"></param>
-        /// <returns></returns>
-        Task GoToAsync<TData>(ShellNavigationState state, TData navigationData, bool animate = true);
-
-        /// <summary>
-        /// Navigates to a <see cref="Page"/>
-        /// </summary>
-        /// <param name="state">A URI representing either the current page or a destination for navigation in a Shell application.</param>
-        /// <typeparam name="TViewModel">Expected ViewModel Type for the page at the given <paramref name="state"/></typeparam>
-        Task<TViewModel> GoToAsync<TViewModel>(ShellNavigationState state) where TViewModel : class;
-
-        /// <summary>
-        /// Navigates to a <see cref="Page"/>
-        /// </summary>
-        /// <param name="state">A URI representing either the current page or a destination for navigation in a Shell application.</param>
-        /// <param name="animate"></param>
-        /// <typeparam name="TViewModel">Expected ViewModel Type for the page at the given <paramref name="state"/></typeparam>
-        /// <returns></returns>
-        Task<TViewModel> GoToAsync<TViewModel>(ShellNavigationState state, bool animate = true) where TViewModel : class;
-
-        /// <summary>
-        /// Navigates to a <see cref="Page"/> passing data to the target ViewModel
-        /// </summary>
-        /// <param name="state"></param>
-        /// <param name="navigationData"></param>
-        /// <param name="animate"></param>
-        /// <typeparam name="TViewModel">Expected ViewModel Type for the page at the given <paramref name="state"/></typeparam>
-        /// <returns></returns>
-        Task<TViewModel> GoToAsync<TViewModel, TData>(ShellNavigationState state, TData navigationData, bool animate = true) where TViewModel : class;
+        /// <returns>Expected ViewModel Type for the page at the given <paramref name="state"/></returns>
+        Task<object> GoToAsync<TData>(ShellNavigationState state, TData navigationData, bool animate = true);
 
 
         /// <summary>
