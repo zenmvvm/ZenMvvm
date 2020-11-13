@@ -2,7 +2,7 @@
 namespace ZenMvvm
 {
     /// <summary>
-    /// Configurable settings for ZenMvvm
+    /// Configurable settings for the NavigationService
     /// </summary>
     public class NavigationSettings
     {

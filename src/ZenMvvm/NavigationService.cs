@@ -269,17 +269,17 @@ namespace ZenMvvm
             var name =
                 viewModelType.IsInterface && viewModelType.Name.StartsWith("I")
                 ? viewModelType.Name.Substring(1).ReplaceLastOccurrence(
-                            NamingConventions.ViewModelSuffix, NamingConventions.ViewSuffix)
+                            ViewModelLocator.settings.ViewModelSuffix, ViewModelLocator.settings.ViewSuffix)
                 : viewModelType.Name.ReplaceLastOccurrence(
-                            NamingConventions.ViewModelSuffix, NamingConventions.ViewSuffix);
+                            ViewModelLocator.settings.ViewModelSuffix, ViewModelLocator.settings.ViewSuffix);
 
             var viewAssemblyName = string.Format(CultureInfo.InvariantCulture
                 , "{0}.{1}, {2}"
-                , NamingConventions.ViewNamespace ??
+                , ViewModelLocator.settings.ViewNamespace ??
                     viewModelType.Namespace
-                    .Replace(NamingConventions.ViewModelSubNamespace, NamingConventions.ViewSubNamespace)
+                    .Replace(ViewModelLocator.settings.ViewModelSubNamespace, ViewModelLocator.settings.ViewSubNamespace)
                 , name
-                , NamingConventions.ViewAssemblyName ?? viewModelType.GetTypeInfo().Assembly.FullName);
+                , ViewModelLocator.settings.ViewAssemblyName ?? viewModelType.GetTypeInfo().Assembly.FullName);
 
             return Type.GetType(viewAssemblyName);
         }

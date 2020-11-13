@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
 using Xamarin.Forms;
@@ -12,6 +11,11 @@ namespace ZenMvvm
     /// </summary>
     public static class ViewModelLocator
     {
+        /// <summary>
+        /// ViewModelLocator settings
+        /// </summary>
+        internal static readonly ViewModelLocatorSettings settings = new ViewModelLocatorSettings(); //field initialized before ctor
+
         #region UnitTesting Helper
         private static IIoc DefaultContainer() => new SmartDi2IIocAdapter();
         /// <summary>
@@ -31,14 +35,6 @@ namespace ZenMvvm
             => ContainerImplementation = DefaultContainer();
         #endregion
 
-        /// <summary>
-        /// Customises configuration
-        /// </summary>
-        /// <returns></returns>
-        public static ConfigOptions Configure()
-        {
-            return new ConfigOptions();
-        }
 
 #region AutoWireViewModel
         /// <summary>
@@ -170,87 +166,20 @@ namespace ZenMvvm
             // -> follow conventions to produce assemblyqualifiedname
             if(string.IsNullOrEmpty(viewModelName))
                 viewModelName = pageType.Name.ReplaceLastOccurrence(
-                            NamingConventions.ViewSuffix, NamingConventions.ViewModelSuffix);
+                            settings.ViewSuffix, settings.ViewModelSuffix);
 
             // if name provided but not assembly qualified
             // -> use namespace conventions to produce assemblyqualifiedname
             if (!viewModelName.Contains(","))
                 viewModelName = string.Format(CultureInfo.InvariantCulture
                 , "{0}.{1}, {2}"
-                , NamingConventions.ViewModelNamespace ??
+                , settings.ViewModelNamespace ??
                     pageType.Namespace
-                    .Replace(NamingConventions.ViewSubNamespace, NamingConventions.ViewModelSubNamespace)
+                    .Replace(settings.ViewSubNamespace, settings.ViewModelSubNamespace)
                 , viewModelName
-                , NamingConventions.ViewModelAssemblyName ?? pageType.GetTypeInfo().Assembly.FullName);
+                , settings.ViewModelAssemblyName ?? pageType.GetTypeInfo().Assembly.FullName);
 
             return Type.GetType(viewModelName);
-        }
-    }
-
-    /// <summary>
-    /// Plumbing for Fluent Api
-    /// </summary>
-    [EditorBrowsable(EditorBrowsableState.Never)]
-    public sealed class ConfigOptions
-    {
-        /// <summary>
-        /// Set Naming Convention
-        /// </summary>
-        public ConfigOptions SetViewSuffix(string suffix)
-        {
-            NamingConventions.ViewSuffix = suffix;
-            return this;
-        }
-
-        /// <summary>
-        /// Set Naming Convention
-        /// </summary>
-        public ConfigOptions SetViewModelSuffix(string suffix)
-        {
-            NamingConventions.ViewModelSuffix = suffix;
-            return this;
-        }
-
-        /// <summary>
-        /// Set Naming Convention
-        /// </summary>
-        public ConfigOptions SetViewAssemblyQualifiedNamespace<TAnyView>()
-        {
-            SetViewAssemblyQualifiedNamespace(
-                typeof(TAnyView).Namespace,
-                typeof(TAnyView).Assembly.FullName);
-            return this;
-        }
-
-        /// <summary>
-        /// Set Naming Convention
-        /// </summary>
-        public ConfigOptions SetViewAssemblyQualifiedNamespace(string namespaceName, string assemblyName)
-        {
-            NamingConventions.ViewAssemblyName = assemblyName;
-            NamingConventions.ViewNamespace = namespaceName;
-            return this;
-        }
-
-        /// <summary>
-        /// Set Naming Convention
-        /// </summary>
-        public ConfigOptions SetViewModelAssemblyQualifiedNamespace<TAnyViewModel>()
-        {
-            SetViewModelAssemblyQualifiedNamespace(
-                typeof(TAnyViewModel).Namespace,
-                typeof(TAnyViewModel).Assembly.FullName);
-            return this;
-        }
-
-        /// <summary>
-        /// Set Naming Convention
-        /// </summary>
-        public ConfigOptions SetViewModelAssemblyQualifiedNamespace(string namespaceName, string assemblyName)
-        {
-            NamingConventions.ViewModelAssemblyName = assemblyName;
-            NamingConventions.ViewModelNamespace = namespaceName;
-            return this;
         }
     }
 }
