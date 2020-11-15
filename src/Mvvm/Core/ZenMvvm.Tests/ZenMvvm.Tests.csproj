@@ -21,6 +21,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ZenMvvm\ZenMvvm.csproj" />
-    <ProjectReference Include="..\..\ZenMvvm.TestAssembly\ZenMvvm.TestAssembly.csproj" />
+    <ProjectReference Include="..\ZenMvvm.TestAssembly\ZenMvvm.TestAssembly.csproj" />
   </ItemGroup>  
 </Project>
