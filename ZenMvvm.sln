@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZenMvvm.Tests", "src\Mvvm\C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZenMvvm.TestAssembly", "src\Mvvm\Core\ZenMvvm.TestAssembly\ZenMvvm.TestAssembly.csproj", "{A20844DC-05F0-4397-B5D8-A231D6E620A0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZenMvvm.Zen", "src\Mvvm\Flavours\Zen\ZenMvvm.Zen.csproj", "{97DE90E6-A33F-42BE-A6FA-2CAB460B7BC2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +37,10 @@ Global
 		{A20844DC-05F0-4397-B5D8-A231D6E620A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A20844DC-05F0-4397-B5D8-A231D6E620A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A20844DC-05F0-4397-B5D8-A231D6E620A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97DE90E6-A33F-42BE-A6FA-2CAB460B7BC2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97DE90E6-A33F-42BE-A6FA-2CAB460B7BC2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97DE90E6-A33F-42BE-A6FA-2CAB460B7BC2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97DE90E6-A33F-42BE-A6FA-2CAB460B7BC2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
