@@ -11,9 +11,9 @@
   </PropertyGroup>
 <ItemGroup>
 	<PackageReference Include="Xamarin.Forms" Version="4.5.0.356" />
-	<PackageReference Include="SmartDi" Version="20201103.1.0" />
 </ItemGroup>
 <ItemGroup>
   <ProjectReference Include="..\..\Core\ZenMvvm\ZenMvvm.csproj" />
+  <ProjectReference Include="..\..\..\..\..\..\SmartDi\src\SmartDi\SmartDi.csproj" />
 </ItemGroup>
 </Project>

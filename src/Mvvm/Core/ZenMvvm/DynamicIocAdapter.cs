@@ -6,7 +6,7 @@ namespace ZenMvvm
     /// <summary>
     /// Class that wraps an externally provided Di/Ioc engine to implement the <see cref="IIoc"/> interface.
     /// </summary>
-    public class IocAdapter : IIoc
+    public class DynamicIocAdapter : IIoc
     {
         readonly object container;
         readonly MethodInfo resolveMethod;
@@ -20,11 +20,11 @@ namespace ZenMvvm
         /// <param name="container">Your chosen external Di/Ioc engine</param>
         /// <param name="resolveMethod">Name of the method that takes a <c>Type</c> as a parameter and returns an <c>object</c>. Hint: use <c>nameof()</c></param>
         /// <param name="interfaceName">Only necessary if you need to call an explicit interface member</param>
-        public IocAdapter(object container, string resolveMethod, string interfaceName = null)
+        public DynamicIocAdapter(object container, string resolveMethod, string interfaceName = null)
         {
             this.container = container;
             this.interfaceName = interfaceName;
-            this.resolveMethod = container.GetType().GetMethod(resolveMethod, new[] { typeof(Type) }) ?? throw new ArgumentException(nameof(IocAdapter)+" could not attach to provided method '"+resolveMethod+"'");
+            this.resolveMethod = container.GetType().GetMethod(resolveMethod, new[] { typeof(Type) }) ?? throw new ArgumentException(nameof(DynamicIocAdapter)+" could not attach to provided method '"+resolveMethod+"'");
         }
 
         /// <summary>
@@ -34,11 +34,11 @@ namespace ZenMvvm
         /// <param name="container">Your chosen external Di/Ioc engine</param>
         /// <param name="resolveMethod">Name of the method that takes a <c>Type</c> as a parameter and returns an <c>object</c>. Hint: use <c>nameof()</c></param>
         /// <param name="resolutionExtensionType">Class that contains the extension method with the <paramref name="resolveMethod"/></param>
-        public IocAdapter(object container, Type resolutionExtensionType, string resolveMethod)
+        public DynamicIocAdapter(object container, Type resolutionExtensionType, string resolveMethod)
         {
             this.isExtensionMethod = true;
             this.container = container;
-            this.resolveMethod = resolutionExtensionType.GetMethod(resolveMethod, new[] { container.GetType(), typeof(Type) }) ?? throw new ArgumentException(nameof(IocAdapter) + " could not attach to provided method '" + resolveMethod + "'");
+            this.resolveMethod = resolutionExtensionType.GetMethod(resolveMethod, new[] { container.GetType(), typeof(Type) }) ?? throw new ArgumentException(nameof(DynamicIocAdapter) + " could not attach to provided method '" + resolveMethod + "'");
         }
 
         /// <summary>

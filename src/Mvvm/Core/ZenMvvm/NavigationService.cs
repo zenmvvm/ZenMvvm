@@ -40,7 +40,6 @@ namespace ZenMvvm
         /// <summary>
         /// reates a new instance of the NavigationService
         /// </summary>
-        [ResolveUsing]
         public NavigationService()
         {
             //navigation = Shell.Current.Navigation;

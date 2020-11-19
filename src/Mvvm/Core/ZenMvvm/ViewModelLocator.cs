@@ -17,22 +17,22 @@ namespace ZenMvvm
         internal static readonly ViewModelLocatorSettings settings = new ViewModelLocatorSettings(); //field initialized before ctor
 
         #region UnitTesting Helper
-        private static IIoc DefaultContainer() => new SmartDi2IIocAdapter();
-        /// <summary>
-        /// Overrides <see cref="Ioc"/> with the chosen <see cref="IIoc"/>
-        /// </summary>
-        internal static IIoc ContainerImplementation { private get; set; } = DefaultContainer();
+        //private static IIoc DefaultContainer() => new SmartDi2IIocAdapter();
+        ///// <summary>
+        ///// Overrides <see cref="Ioc"/> with the chosen <see cref="IIoc"/>
+        ///// </summary>
+        //internal static IIoc ContainerImplementation { private get; set; } = DefaultContainer();
 
         /// <summary>
         /// Dependency injection container
         /// </summary>
-        internal static IIoc Ioc => ContainerImplementation;
+        public static IIoc Ioc { get; set; }//=> ContainerImplementation;
 
-        /// <summary>
-        /// Revert to default IIoc
-        /// </summary>
-        internal static void ResetContainerImplementationToDefault()
-            => ContainerImplementation = DefaultContainer();
+        ///// <summary>
+        ///// Revert to default IIoc
+        ///// </summary>
+        //internal static void ResetContainerImplementationToDefault()
+        //    => ContainerImplementation = DefaultContainer();
         #endregion
 
 
