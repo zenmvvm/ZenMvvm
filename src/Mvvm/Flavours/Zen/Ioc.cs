@@ -5,17 +5,21 @@ namespace ZenMvvm
 {
     public static class Ioc
     {
+        public static IDiContainer Container { get; private set; }
+
         public static void Init()
         {
-            ViewModelLocator.Ioc = new IocAdaptor(new DiContainer());
+            ViewModelLocator.Ioc = new IocAdaptor(Container);
         }
         public static void Init(ContainerOptions settings)
         {
-            ViewModelLocator.Ioc = new IocAdaptor(new DiContainer(settings));
+            Container = new DiContainer(settings);
+            Init();
         }
         public static void Init(Action<ContainerOptions> configureSettings)
         {
-            ViewModelLocator.Ioc = new IocAdaptor(new DiContainer(configureSettings));
+            Container = new DiContainer(configureSettings);
+            Init();
         }
 
     }

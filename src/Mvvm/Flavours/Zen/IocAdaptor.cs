@@ -5,9 +5,9 @@ namespace ZenMvvm
 {
     public class IocAdaptor : IIoc
     {
-        readonly DiContainer container;
+        readonly IDiContainer container;
 
-        public IocAdaptor(DiContainer container)
+        public IocAdaptor(IDiContainer container)
         {
             this.container = container;
         }
