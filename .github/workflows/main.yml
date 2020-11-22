@@ -29,7 +29,7 @@ jobs:
     strategy:
       matrix:
         #os: [ ubuntu-latest, windows-latest, macos-latest ]
-        os: [ ubuntu-latest, macos-latest ]
+        os: [ ubuntu-latest ]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -48,10 +48,10 @@ jobs:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: true        
         run: echo "::set-env name=NIGHTLY_PACKAGE_VERSION::$(date +'%Y%m%dT%Hh%Mm%Ss')"
       - name: Pack
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'ubuntu-latest'
         run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$NIGHTLY_PACKAGE_VERSION src/$PROJECT_NAME/$PROJECT_NAME.*proj
       - name: Upload Artifact
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v2
         with:
           name: nupkg
@@ -59,7 +59,7 @@ jobs:
   prerelease:
     needs: build
     if: github.ref == 'refs/heads/develop'
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Download Artifact
         uses: actions/download-artifact@v1
@@ -76,7 +76,7 @@ jobs:
   deploy:
     needs: build
     if: github.event_name == 'release'
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Setup .NET Core
