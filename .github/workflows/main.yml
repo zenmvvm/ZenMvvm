@@ -72,7 +72,7 @@ jobs:
 #             curl -vX PUT -u "$GITHUB_USER:$GITHUB_TOKEN" -F package=@$f $GITHUB_FEED
 #           done
       - name: Publish Nuget to GitHub registry
-        run: dotnet nuget push ./nupkg/*.nupkg -k ${GITHUB_TOKEN} -s https://nuget.pkg.github.com/zenmvvm/index.json --skip-duplicate
+        run: dotnet nuget push ./nupkg/*.nupkg -k ${GITHUB_TOKEN} -s https://nuget.pkg.github.com/zenmvvm/ZenMvvm/index.json --skip-duplicate
       - name: Push to MyGet Feed
         run: dotnet nuget push ./nupkg/*.nupkg --source $MYGET_FEED --skip-duplicate --api-key $MYGET_KEY
   deploy:
