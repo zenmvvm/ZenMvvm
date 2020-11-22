@@ -1,3 +1,5 @@
+# Adapted from https://dusted.codes/github-actions-for-dotnet-core-nuget-packages
+# ... well explained
 name: .NET Standard
 on:
   push:
@@ -43,10 +45,10 @@ jobs:
         run: dotnet build -c Release --no-restore
 #       - name: Test
 #         run: dotnet test -c Release
-      - name: Set current date as env variable
+      - name: Use current date for Nightly Package Version
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: true        
-        run: echo "::set-env name=NIGHTLY_PACKAGE_VERSION::$(date +'%Y%m%d.%H.%M.%S')"
+        run: echo "::set-env name=NIGHTLY_PACKAGE_VERSION::$(date +'%Y%m%d.%H.%M.%S-dev')"
       - name: Pack
         if: matrix.os == 'ubuntu-latest'
         run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$NIGHTLY_PACKAGE_VERSION src/$PROJECT_NAME/$PROJECT_NAME.*proj
@@ -65,16 +67,16 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: nupkg
-    - name: Push to GitHub Feed
-      run: |
-        for f in ./nupkg/*.nupkg
-        do
-          curl -vX PUT -u "$GITHUB_USER:$GITHUB_TOKEN" -F package=@$f $GITHUB_FEED
-        done
-    - name: Publish Nuget to GitHub registry
+#     - name: Push to GitHub Feed
+#       run: |
+#         for f in ./nupkg/*.nupkg
+#         do
+#           curl -vX PUT -u "$GITHUB_USER:$GITHUB_TOKEN" -F package=@$f $GITHUB_FEED
+#         done
+    - name: Publish Nuget to GitHub Feed
       run: dotnet nuget push ./nupkg/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_FEED --skip-duplicate
-    - name: Push to MyGet Feed
-      run: dotnet nuget push ./nupkg/*.nupkg --source $MYGET_FEED --skip-duplicate --api-key $MYGET_KEY
+#     - name: Push to MyGet Feed
+#       run: dotnet nuget push ./nupkg/*.nupkg --source $MYGET_FEED --skip-duplicate --api-key $MYGET_KEY
   deploy:
     needs: build
     if: github.event_name == 'release'
@@ -93,11 +95,13 @@ jobs:
           VERSION="${VERSION//v}"
           echo Clean Version: $VERSION
           dotnet pack -v normal -c Release --include-symbols --include-source -p:PackageVersion=$VERSION -o nupkg src/$PROJECT_NAME/$PROJECT_NAME.*proj
-      - name: Push to GitHub Feed
-        run: |
-          for f in ./nupkg/*.nupkg
-          do
-            curl -vX PUT -u "$GITHUB_USER:$GITHUB_TOKEN" -F package=@$f $GITHUB_FEED
-          done
+#       - name: Push to GitHub Feed
+#         run: |
+#           for f in ./nupkg/*.nupkg
+#           do
+#             curl -vX PUT -u "$GITHUB_USER:$GITHUB_TOKEN" -F package=@$f $GITHUB_FEED
+#           done
+      - name: Publish Nuget to GitHub Feed
+        run: dotnet nuget push ./nupkg/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_FEED --skip-duplicate          
       - name: Push to NuGet Feed
         run: dotnet nuget push ./nupkg/*.nupkg --source $NUGET_FEED --skip-duplicate --api-key $NUGET_KEY
