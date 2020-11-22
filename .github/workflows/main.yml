@@ -80,7 +80,7 @@ jobs:
 #             curl -vX PUT -u "$GITHUB_USER:$GITHUB_TOKEN" -F package=@$f $GITHUB_FEED
 #           done
     - name: PushGithub
-      run: dotnet nuget push *.nupkg --no-symbols --skip-duplicate
+      run: dotnet nuget push ./nupkg/*.nupkg --no-symbols --skip-duplicate
       env:
         NUGET_AUTH_TOKEN: ${{ env.GITHUB_TOKEN }}
     - name: Publish Nuget to GitHub registry
