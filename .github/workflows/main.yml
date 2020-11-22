@@ -13,7 +13,7 @@ env:
   # Project name to pack and publish
   PROJECT_NAME: ZenMvvm
   # GitHub Packages Feed settings
-  GITHUB_FEED: https://nuget.pkg.github.com/zenmvvm/
+  GITHUB_FEED: https://nuget.pkg.github.com/zenmvvm/ZenMvvm
   GITHUB_USER: z33bs
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   # Official NuGet Feed settings
@@ -22,12 +22,14 @@ env:
   # MyGet Feed settings
   MYGET_FEED: https://www.myget.org/F/zeebz-open-source/api/v3/index.json
   MYGET_KEY: ${{ secrets.MYGET_KEY}}
+  #NOW -> will be set in script
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        #os: [ ubuntu-latest, windows-latest, macos-latest ]
+        os: [ ubuntu-latest, macos-latest ]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -41,9 +43,11 @@ jobs:
         run: dotnet build -c Release --no-restore
 #       - name: Test
 #         run: dotnet test -c Release
+      - name: Set current date as env variable
+        run: echo "::set-env name=NOW::$(date +'%Y-%m-%dT%H:%M:%S')"
       - name: Pack
         if: matrix.os == 'ubuntu-latest'
-        run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$GITHUB_RUN_ID src/$PROJECT_NAME/$PROJECT_NAME.*proj
+        run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$NOW src/$PROJECT_NAME/$PROJECT_NAME.*proj
       - name: Upload Artifact
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v2
