@@ -9,17 +9,18 @@ namespace ZenMvvm
 
         public static void Init()
         {
+            Container = new DiContainer();
             ViewModelLocator.Ioc = new IocAdaptor(Container);
         }
         public static void Init(ContainerOptions settings)
         {
             Container = new DiContainer(settings);
-            Init();
+            ViewModelLocator.Ioc = new IocAdaptor(Container);
         }
         public static void Init(Action<ContainerOptions> configureSettings)
         {
             Container = new DiContainer(configureSettings);
-            Init();
+            ViewModelLocator.Ioc = new IocAdaptor(Container);
         }
 
     }
