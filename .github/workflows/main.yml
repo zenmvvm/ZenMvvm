@@ -68,6 +68,7 @@ jobs:
         source-url: ${{ env.GITHUB_FEED }}
       env:
         NUGET_AUTH_TOKEN: '%NUGET_AUTH_TOKEN%'      
+        ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     - name: Download Artifact
       uses: actions/download-artifact@v1
       with:
