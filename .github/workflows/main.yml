@@ -22,7 +22,7 @@ env:
   # MyGet Feed settings
   MYGET_FEED: https://www.myget.org/F/zeebz-open-source/api/v3/index.json
   MYGET_KEY: ${{ secrets.MYGET_KEY}}
-  #NOW -> will be set in script
+  #NIGHTLY_PACKAGE_VERSION -> will be set in script
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -46,10 +46,10 @@ jobs:
       - name: Set current date as env variable
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: true        
-        run: echo "::set-env name=NOW::$(date +'%Y-%m-%dT%H.%M.%S')"
+        run: echo "::set-env name=NIGHTLY_PACKAGE_VERSION::$(date +'%Y%m%dT%H.%M.%S')"
       - name: Pack
         if: matrix.os == 'ubuntu-latest'
-        run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$NOW src/$PROJECT_NAME/$PROJECT_NAME.*proj
+        run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$NIGHTLY_PACKAGE_VERSION src/$PROJECT_NAME/$PROJECT_NAME.*proj
       - name: Upload Artifact
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v2
