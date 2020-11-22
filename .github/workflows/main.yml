@@ -65,12 +65,14 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: nupkg
-      - name: Push to GitHub Feed
-        run: |
-          for f in ./nupkg/*.nupkg
-          do
-            curl -vX PUT -u "$GITHUB_USER:$GITHUB_TOKEN" -F package=@$f $GITHUB_FEED
-          done
+#       - name: Push to GitHub Feed
+#         run: |
+#           for f in ./nupkg/*.nupkg
+#           do
+#             curl -vX PUT -u "$GITHUB_USER:$GITHUB_TOKEN" -F package=@$f $GITHUB_FEED
+#           done
+      - name: Publish Nuget to GitHub registry
+        run: dotnet nuget push ./nupkg/*.nupkg -k ${GITHUB_TOKEN} -s https://nuget.pkg.github.com/zenmvvm/index.json --skip-duplicate --no-symbols 
       - name: Push to MyGet Feed
         run: dotnet nuget push ./nupkg/*.nupkg --source $MYGET_FEED --skip-duplicate --api-key $MYGET_KEY
   deploy:
