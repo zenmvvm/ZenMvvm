@@ -81,7 +81,7 @@ jobs:
     - name: PushGithub
       run: dotnet nuget push *.nupkg --no-symbols --skip-duplicate
       env:
-        NUGET_AUTH_TOKEN: ${{ GITHUB_TOKEN }}
+        NUGET_AUTH_TOKEN: ${{ env.GITHUB_TOKEN }}
     - name: Publish Nuget to GitHub registry
       run: dotnet nuget push ./nupkg/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_FEED --skip-duplicate
     - name: Push to MyGet Feed
