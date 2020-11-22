@@ -13,7 +13,7 @@ env:
   # Project name to pack and publish
   PROJECT_NAME: ZenMvvm
   # GitHub Packages Feed settings
-  GITHUB_FEED: https://nuget.pkg.github.com/zenmvvm/ZenMvvm
+  GITHUB_FEED: https://nuget.pkg.github.com/zenmvvm/
   GITHUB_USER: z33bs
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   # Official NuGet Feed settings
