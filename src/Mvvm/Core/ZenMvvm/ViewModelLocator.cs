@@ -164,9 +164,17 @@ namespace ZenMvvm
         {
             // if no name given
             // -> follow conventions to produce assemblyqualifiedname
-            if(string.IsNullOrEmpty(viewModelName))
-                viewModelName = pageType.Name.ReplaceLastOccurrence(
-                            settings.ViewSuffix, settings.ViewModelSuffix);
+            if (string.IsNullOrEmpty(viewModelName))
+            {
+                viewModelName = (pageType.IsGenericType
+                    ? pageType
+                    .GetGenericTypeDefinition()
+                    : pageType)
+                    .Name
+                    .ReplaceLastOccurrence(
+                        settings.ViewSuffix,
+                        settings.ViewModelSuffix);
+            }
 
             // if name provided but not assembly qualified
             // -> use namespace conventions to produce assemblyqualifiedname
@@ -179,7 +187,14 @@ namespace ZenMvvm
                 , viewModelName
                 , settings.ViewModelAssemblyName ?? pageType.GetTypeInfo().Assembly.FullName);
 
-            return Type.GetType(viewModelName);
+            var viewModelType = Type.
+                    GetType(viewModelName);
+
+            //todo test if still works when generic args are generic in themselves
+            return pageType.IsGenericType
+                    ? viewModelType.
+                        MakeGenericType(pageType.GetGenericArguments())
+                    : viewModelType;
         }
     }
 }
