@@ -35,6 +35,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Test Versioning
+        run: |
+          arrTag=(${GITHUB_REF//\// })
+          VERSION="$NIGHTLY_PACKAGE_VERSION-${arrTag[2]}"
+          echo $VERSION
+        
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
@@ -73,7 +79,7 @@ jobs:
     - name: Push to MyGet Feed
       run: |
         arrTag=(${GITHUB_REF//\// })
-        VERSION=$NIGHTLY_PACKAGE_VERSION"${arrTag[2]}"
+        VERSION="$NIGHTLY_PACKAGE_VERSION-${arrTag[2]}"
         dotnet nuget push ./nupkg/*.nupkg --source $MYGET_FEED --skip-duplicate --api-key $MYGET_KEY -p:PackageVersion=$VERSION
 
 
