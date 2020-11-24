@@ -37,6 +37,7 @@ jobs:
         uses: actions/checkout@v2
       - name: Test Versioning
         run: |
+          NIGHTLY_PACKAGE_VERSION=$(date +'%Y%m%d.%H.%M.%S-dev')
           arrTag=(${GITHUB_REF//\// })
           VERSION="$NIGHTLY_PACKAGE_VERSION-${arrTag[2]}"
           echo $VERSION
