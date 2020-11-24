@@ -51,13 +51,32 @@ jobs:
         run: echo "::set-env name=NIGHTLY_PACKAGE_VERSION::$(date +'%Y%m%d.%H.%M.%S-dev')"
       - name: Pack
         if: matrix.os == 'ubuntu-latest'
-        run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$NIGHTLY_PACKAGE_VERSION src/$PROJECT_NAME/$PROJECT_NAME.*proj
+        run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion="$NIGHTLY_PACKAGE_VERSION-$VERSION" src/$PROJECT_NAME/$PROJECT_NAME.*proj
       - name: Upload Artifact
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v2
         with:
           name: nupkg
           path: ./src/${{ env.PROJECT_NAME }}/bin/Release/*.nupkg
+
+
+  bleedingedge:
+    needs: build
+    # Run if other nuget pushes don't apply
+    if: github.ref != 'refs/heads/develop' && github.event_name != 'release'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download Artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: nupkg
+    - name: Push to MyGet Feed
+      run: |
+        arrTag=(${GITHUB_REF//\// })
+        VERSION=$NIGHTLY_PACKAGE_VERSION"${arrTag[2]}"
+        dotnet nuget push ./nupkg/*.nupkg --source $MYGET_FEED --skip-duplicate --api-key $MYGET_KEY -p:PackageVersion=$VERSION
+
+
   prerelease:
     needs: build
     if: github.ref == 'refs/heads/develop'
@@ -77,6 +96,8 @@ jobs:
       run: dotnet nuget push ./nupkg/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_FEED --skip-duplicate
 #     - name: Push to MyGet Feed
 #       run: dotnet nuget push ./nupkg/*.nupkg --source $MYGET_FEED --skip-duplicate --api-key $MYGET_KEY
+
+
   deploy:
     needs: build
     if: github.event_name == 'release'
