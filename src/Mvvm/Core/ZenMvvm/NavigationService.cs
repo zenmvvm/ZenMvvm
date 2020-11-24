@@ -222,7 +222,7 @@ namespace ZenMvvm
             return InternalPushAsync<TViewModel>(animated, isModal: true);
         }
 
-        private Task<TViewModel> InternalPushAsync<TViewModel>(
+        internal Task<TViewModel> InternalPushAsync<TViewModel>(
             bool animated,
             bool isModal)
             where TViewModel : class
