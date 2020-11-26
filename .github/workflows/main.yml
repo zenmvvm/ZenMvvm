@@ -1,6 +1,7 @@
 # Adapted from https://dusted.codes/github-actions-for-dotnet-core-nuget-packages
 # ... well explained
-name: .NET Standard
+
+name: CI
 on:
   push:
   pull_request:
@@ -26,12 +27,15 @@ env:
   MYGET_KEY: ${{ secrets.MYGET_KEY}}
   #NIGHTLY_PACKAGE_VERSION -> will be set in script
 jobs:
-  build:
+  build:    
+    if: github.ref != 'refs/heads/develop' && github.event_name != 'release'
     runs-on: ${{ matrix.os }}
     strategy:
-      matrix:
+        
+        matrix:
+
         #os: [ ubuntu-latest, windows-latest, macos-latest ]
-        os: [ ubuntu-latest ]
+          os: [ ubuntu-latest ]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -58,6 +62,14 @@ jobs:
         with:
           name: nupkg
           path: ./src/${{ env.PROJECT_NAME }}/bin/Release/*.nupkg
+      - name: Download Artifact if pre-develop
+        if: matrix.os == 'ubuntu-latest' && github.ref != 'refs/heads/develop' && github.event_name != 'release'
+        uses: actions/download-artifact@v1
+        with:
+          name: nupkg
+      - name: If pre-develop, upload Bleeding Edge Package to MyGet
+        if: matrix.os == 'ubuntu-latest' && github.ref != 'refs/heads/develop' && github.event_name != 'release'
+        run: dotnet nuget push ./nupkg/*.nupkg --source $MYGET_FEED --skip-duplicate --api-key $MYGET_KEY
 
   dependabotautomerge:
     # from https://github.com/dependabot/dependabot-core/issues/1973
@@ -81,7 +93,6 @@ jobs:
               pull_number: context.payload.pull_request.number
             })
           github-token: ${{github.token}}
-
   prerelease:
     needs: build
     if: github.ref == 'refs/heads/develop'
