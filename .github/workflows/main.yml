@@ -47,8 +47,12 @@ jobs:
         run: dotnet restore
       - name: Build
         run: dotnet build -c Release --no-restore
-      - name: Test
-        run: dotnet test -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=./src/${{ env.PROJECT_NAME }}/bin/TestResults/Coverage/'
+      - name: Run Tests and Collect Coverage
+        run: dotnet test -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput=./src/${{ env.PROJECT_NAME }}/bin/TestResults/
+      - name: Test-Report
+        run: |
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          reportgenerator -reports:./src/${{ env.PROJECT_NAME }}/bin/TestResults/**/coverage.cobertura.xml -targetdir:./src/${{ env.PROJECT_NAME }}/bin/TestResults/CodeCoverage -reporttypes:HtmlInline_AzurePipelines -reporttypes:Badges
       - name: Use current date for Nightly Package Version
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: true        
