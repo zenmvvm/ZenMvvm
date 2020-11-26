@@ -52,7 +52,7 @@ jobs:
       - name: Test-Report
         run: |
           dotnet tool install -g dotnet-reportgenerator-globaltool
-          reportgenerator -reports:./src/${{ env.PROJECT_NAME }}/bin/TestResults/**/coverage.cobertura.xml -targetdir:./src/${{ env.PROJECT_NAME }}/bin/TestResults/CodeCoverage -reporttypes:HtmlInline_AzurePipelines -reporttypes:Badges
+          reportgenerator -reports:./src/${{ env.PROJECT_NAME }}/bin/TestResults/coverage.cobertura.xml -targetdir:./src/${{ env.PROJECT_NAME }}/bin/TestResults/CodeCoverage -reporttypes:HtmlInline_AzurePipelines -reporttypes:Badges
       - name: Use current date for Nightly Package Version
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: true        
