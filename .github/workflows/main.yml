@@ -49,9 +49,9 @@ jobs:
         run: dotnet build -c Release --no-restore
       - name: Test and Generate Coverage Report
         run: |
-          dotnet test -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput="./TestResults/"
+          dotnet test -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput="./"
           dotnet tool install -g dotnet-reportgenerator-globaltool
-          reportgenerator "-reports:./TestResults/coverage.cobertura.xml" "-targetdir:./TestResults/CodeCoverage" -reporttypes:Badges
+          reportgenerator "-reports:./coverage.cobertura.xml" "-targetdir:./CodeCoverage" -reporttypes:Badges
       - name: Use current date for Nightly Package Version
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: true        
