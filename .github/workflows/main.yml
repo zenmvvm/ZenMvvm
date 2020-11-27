@@ -66,6 +66,12 @@ jobs:
         with:
           name: nupkg
           path: ./src/${{ env.PROJECT_NAME }}/bin/Release/*.nupkg
+      - name: Upload Artifact
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: badges
+          path: ./badge_*.*
       - name: Download Artifact if pre-develop
         if: matrix.os == 'ubuntu-latest' && github.ref != 'refs/heads/develop' && github.event_name != 'release'
         uses: actions/download-artifact@v1
