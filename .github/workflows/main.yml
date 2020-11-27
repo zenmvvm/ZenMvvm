@@ -52,7 +52,7 @@ jobs:
       - name: ReportGenerator
         run: |
           dotnet tool install -g dotnet-reportgenerator-globaltool
-          dotnet reportgenerator "-reports:./**/coverage.cobertura.xml" "-targetdir:./" -reporttypes:Badges
+          reportgenerator "-reports:./**/coverage.cobertura.xml" "-targetdir:./" -reporttypes:Badges
       - name: Use current date for Nightly Package Version
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: true        
