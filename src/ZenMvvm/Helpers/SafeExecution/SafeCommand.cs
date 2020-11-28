@@ -19,7 +19,7 @@ namespace ZenMvvm.Helpers
     /// catching exceptions, and offering exception handling.
     /// Runs the Command on a background thread while giving
     /// the option to run from current synchronisation context.
-    /// Sets <see cref="IViewModelBase.IsBusy"/> to <c>true</c>
+    /// Sets <see cref="IBusy.IsBusy"/> to <c>true</c>
     /// while Command is executing. 
     /// </summary>
     public class SafeCommand<T> : SafeCommand
@@ -30,7 +30,7 @@ namespace ZenMvvm.Helpers
         /// <param name="executeFunction">The function executed when
         /// <see cref="ICommand.Execute(object)"/> is called.</param>
         /// <param name="viewModel"> Option to pass the calling ViewModel
-        /// via <c>this</c>. Will set <see cref="IViewModelBase.IsBusy"/>
+        /// via <c>this</c>. Will set <see cref="IBusy.IsBusy"/>
         /// to <c>true</c> while <paramref name="executeFunction"/> is
         /// executing</param>
         /// <param name="canExecute">The function that verifies whether or
@@ -45,7 +45,7 @@ namespace ZenMvvm.Helpers
         /// <param name="isBlocking">Execution will be blocked if the callback is already executing</param>
         public SafeCommand(
             Func<T, Task> executeFunction,
-            IViewModelBase viewModel = null,
+            IBusy viewModel = null,
             Action<Exception> onException = null,
             Func<T, bool> canExecute = null,
             bool mustRunOnCurrentSyncContext = false,
@@ -97,7 +97,7 @@ namespace ZenMvvm.Helpers
         /// <param name="executeAction">The function executed when
         /// <see cref="ICommand.Execute(object)"/> is called.</param>
         /// <param name="viewModel"> Option to pass the calling ViewModel
-        /// via <c>this</c>. Will set <see cref="IViewModelBase.IsBusy"/>
+        /// via <c>this</c>. Will set <see cref="IBusy.IsBusy"/>
         /// to <c>true</c> while <paramref name="executeAction"/> is
         /// executing</param>
         /// <param name="canExecute">The function that verifies whether or
@@ -112,7 +112,7 @@ namespace ZenMvvm.Helpers
         /// <param name="isBlocking">Execution will be blocked if the callback is already executing</param>
         public SafeCommand(
             Action<T> executeAction,
-            IViewModelBase viewModel = null,
+            IBusy viewModel = null,
             Action<Exception> onException = null,
             Func<T, bool> canExecute = null,
             bool mustRunOnCurrentSyncContext = false,
@@ -166,7 +166,7 @@ namespace ZenMvvm.Helpers
         public SafeCommand(
             Func<T, Task> executeFunction,
             TaskScheduler scheduler,
-            IViewModelBase viewModel = null,
+            IBusy viewModel = null,
             Action<Exception> onException = null,
             Func<T, bool> canExecute = null,
             //bool mustRunOnCurrentSyncContext is moot
@@ -221,7 +221,7 @@ namespace ZenMvvm.Helpers
     /// catching exceptions, and offering exception handling.
     /// Runs the Command on a background thread while giving
     /// the option to run from current synchronisation context.
-    /// Sets <see cref="IViewModelBase.IsBusy"/> to <c>true</c>
+    /// Sets <see cref="IBusy.IsBusy"/> to <c>true</c>
     /// while Command is executing. 
     /// </summary>
     public class SafeCommand : ISafeCommand
@@ -234,7 +234,7 @@ namespace ZenMvvm.Helpers
         readonly bool _mustRunOnCurrentSyncContext;
         readonly Action<object> _execute;
 
-        readonly IViewModelBase _viewModel;
+        readonly IBusy _viewModel;
         readonly bool _isBlocking;
 
 
@@ -244,7 +244,7 @@ namespace ZenMvvm.Helpers
         /// <param name="executeFunction">The function executed when
         /// <see cref="ICommand.Execute(object)"/> is called.</param>
         /// <param name="viewModel"> Option to pass the calling ViewModel
-        /// via <c>this</c>. Will set <see cref="IViewModelBase.IsBusy"/>
+        /// via <c>this</c>. Will set <see cref="IBusy.IsBusy"/>
         /// to <c>true</c> while <paramref name="executeFunction"/> is
         /// executing</param>
         /// <param name="canExecute">The function that verifies whether or
@@ -258,7 +258,7 @@ namespace ZenMvvm.Helpers
         /// In Xamarin.Forms this will be the Main (UI) thread.</param>
         /// <param name="isBlocking">Execution will be blocked if the callback is already executing</param>
         public SafeCommand(Func<Task> executeFunction,
-            IViewModelBase viewModel = null,
+            IBusy viewModel = null,
             Action<Exception> onException = null,
             Func<bool> canExecute = null,
             bool mustRunOnCurrentSyncContext = false,
@@ -301,7 +301,7 @@ namespace ZenMvvm.Helpers
         /// <param name="executeAction">The function executed when
         /// <see cref="ICommand.Execute(object)"/> is called.</param>
         /// <param name="viewModel"> Option to pass the calling ViewModel
-        /// via <c>this</c>. Will set <see cref="IViewModelBase.IsBusy"/>
+        /// via <c>this</c>. Will set <see cref="IBusy.IsBusy"/>
         /// to <c>true</c> while <paramref name="executeAction"/> is
         /// executing</param>
         /// <param name="canExecute">The function that verifies whether or
@@ -316,7 +316,7 @@ namespace ZenMvvm.Helpers
         /// <param name="isBlocking">Execution will be blocked if the callback is already executing</param>
         public SafeCommand(
             Action executeAction,
-            IViewModelBase viewModel = null,
+            IBusy viewModel = null,
             Action<Exception> onException = null,
             Func<bool> canExecute = null,
             bool mustRunOnCurrentSyncContext = false,
@@ -364,7 +364,7 @@ namespace ZenMvvm.Helpers
         public SafeCommand(
             Func<object, Task> executeFunction,
             TaskScheduler scheduler,
-            IViewModelBase viewModel = null,
+            IBusy viewModel = null,
             Action<Exception> onException = null,
             Func<object, bool> canExecute = null,
             //mustRunOnCurrentSyncContext is moot
@@ -384,7 +384,7 @@ namespace ZenMvvm.Helpers
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected SafeCommand(
             Func<object, Task> internalExecuteFunction,
-            IViewModelBase viewModel,
+            IBusy viewModel,
             Action<Exception> onException,
             Func<object, bool> canExecute,
             bool mustRunOnCurrentSyncContext,
@@ -402,7 +402,7 @@ namespace ZenMvvm.Helpers
         [EditorBrowsable(EditorBrowsableState.Never)]
         protected SafeCommand(
             Action<object> internalExecuteAction,
-            IViewModelBase viewModel,
+            IBusy viewModel,
             Action<Exception> onException,
             Func<object, bool> canExecute,
             bool mustRunOnCurrentSyncContext,
@@ -415,7 +415,7 @@ namespace ZenMvvm.Helpers
         }
 
         private SafeCommand(
-            IViewModelBase viewModel,
+            IBusy viewModel,
             Action<Exception> onException,
             Func<object, bool> baseCanExecute,
             bool mustRunOnCurrentSyncContext,
@@ -451,6 +451,8 @@ namespace ZenMvvm.Helpers
         /// </summary>
         public void Execute(object parameter)
         {
+            //parameter is validated for SafeCommand<T> when registering the Expression
+
             if (_execute != null)
                 InternalExecute(parameter);
             else

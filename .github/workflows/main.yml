@@ -1,0 +1,155 @@
+# Adapted from https://dusted.codes/github-actions-for-dotnet-core-nuget-packages
+# ... well explained
+
+name: CI
+on:
+  push:
+  pull_request:
+  release:
+    types:
+      - published
+env:
+  # Stop wasting time caching packages
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
+  # Disable sending usage data to Microsoft
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  # Project name to pack and publish
+  PROJECT_NAME: ZenMvvm
+  # GitHub Packages Feed settings
+  GITHUB_FEED: https://nuget.pkg.github.com/zenmvvm/
+  GITHUB_USER: z33bs
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # Official NuGet Feed settings
+  NUGET_FEED: https://api.nuget.org/v3/index.json
+  NUGET_KEY: ${{ secrets.NUGET_KEY }}
+  # MyGet Feed settings
+  MYGET_FEED: https://www.myget.org/F/zeebz-open-source/api/v3/index.json
+  MYGET_KEY: ${{ secrets.MYGET_KEY}}
+  #NIGHTLY_PACKAGE_VERSION -> will be set in script
+jobs:
+  build:    
+    runs-on: ${{ matrix.os }}
+    strategy:        
+        matrix:
+        #os: [ ubuntu-latest, windows-latest, macos-latest ]
+          os: [ ubuntu-latest ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.100
+      - name: Restore
+        run: dotnet restore
+      - name: Build
+        run: dotnet build -c Release --no-restore
+      - name: Test and Generate Coverage Report w. Coverlet
+        run: dotnet test -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput="./"
+      - name: ReportGenerator
+        run: |
+          git config --global user.email "zeebsmail@gmail.com"
+          git config --global user.name "z33bs"
+          rm -f ./coverage/badge_linecoverage.svg
+          git add ./coverage/badge_linecoverage.svg
+          git commit -m "Remove old coverage badge"
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          reportgenerator "-reports:./**/coverage.cobertura.xml" "-targetdir:./coverage" "-reporttypes:Badges;HtmlInline"
+          git add ./coverage/badge_linecoverage.svg
+          git commit -m "Add new coverage badge"
+          git push
+      - name: Set NIGHTLY_PACKAGE_VERSION name
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: true        
+        run: echo "::set-env name=NIGHTLY_PACKAGE_VERSION::$(date +'0.0.%Y%m%d-%Hh%Mm%S')"
+      - name: Pack
+        if: matrix.os == 'ubuntu-latest'
+        run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$NIGHTLY_PACKAGE_VERSION src/$PROJECT_NAME/$PROJECT_NAME.*proj
+      - name: Upload Nupkg Artifact
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: nupkg
+          path: ./src/${{ env.PROJECT_NAME }}/bin/Release/*.nupkg
+      - name: Upload Code Coverage Artifact
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v2
+        with:
+          name: cov
+          path: ./coverage/*.*          
+      - name: If pre-develop, upload Bleeding Edge Package to MyGet
+        if: matrix.os == 'ubuntu-latest' && github.ref != 'refs/heads/develop' && github.event_name != 'release'
+        run: dotnet nuget push ./src/${{ env.PROJECT_NAME }}/bin/Release/*.nupkg --source $MYGET_FEED --skip-duplicate --api-key $MYGET_KEY
+
+  dependabotautomerge:
+    # from https://github.com/dependabot/dependabot-core/issues/1973
+    needs: build
+    if: github.actor == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: automerge
+        uses: actions/github-script@0.2.0
+        with:
+          script: |
+            github.pullRequests.createReview({
+              owner: context.payload.repository.owner.login,
+              repo: context.payload.repository.name,
+              pull_number: context.payload.pull_request.number,
+              event: 'APPROVE'
+            })
+            github.pullRequests.merge({
+              owner: context.payload.repository.owner.login,
+              repo: context.payload.repository.name,
+              pull_number: context.payload.pull_request.number
+            })
+          github-token: ${{github.token}}
+  
+  prerelease:
+    needs: build
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download Artifact
+      uses: actions/download-artifact@v1
+      with:
+        name: nupkg
+    - name: Publish Nuget to GitHub Feed
+      run: dotnet nuget push ./nupkg/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_FEED --skip-duplicate
+
+  deploy:
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.100
+      - name: Create Release NuGet package
+        run: |
+          arrTag=(${GITHUB_REF//\// })
+          VERSION="${arrTag[2]}"
+          echo Version: $VERSION
+          VERSION="${VERSION//v}"
+          echo Clean Version: $VERSION
+          dotnet pack -v normal -c Release --include-symbols --include-source -p:PackageVersion=$VERSION -o nupkg src/$PROJECT_NAME/$PROJECT_NAME.*proj
+      - name: Publish Nuget to GitHub Feed
+        run: dotnet nuget push ./nupkg/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_FEED --skip-duplicate          
+      - name: Push to NuGet Feed
+        run: dotnet nuget push ./nupkg/*.nupkg --source $NUGET_FEED --skip-duplicate --api-key $NUGET_KEY
+      - name: Download Coverage Artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: cov
+      - name: Update coverage badge for readme
+        run: |
+          git config --global user.email "zeebsmail@gmail.com"
+          git config --global user.name "z33bs"
+          rm -f ./coverage/badge_linecoverage.svg
+          git add ./coverage/badge_linecoverage.svg
+          git commit -m "Remove old coverage badge"
+          cp ./cov/badge_linecoverage.svg ./coverage/badge_linecoverage.svg
+          git add ./coverage/badge_linecoverage.svg
+          git commit -m "Add new coverage badge"
+          git push

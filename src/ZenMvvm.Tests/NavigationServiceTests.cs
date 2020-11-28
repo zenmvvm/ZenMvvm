@@ -41,11 +41,17 @@ namespace ZenMvvm.Tests
         [Fact]
         public async Task PushAsyncWithData_Always_ExecutesINavigationPushAsync()
         {
+            var mockIoc = new Mock<IIoc>();
+            mockIoc.Setup(i => i.Resolve(typeof(ImplementsBaseViewModel))).Returns(new Mock<ImplementsBaseViewModel>().Object);
+            ViewModelLocator.Ioc = mockIoc.Object;
+
             var navigation = new Mock<INavigation>();
             navigation.Setup(o => o.PushAsync(It.IsAny<ImplementsBasePage>(), true)).Verifiable();
             var ns = new NavigationService(navigation.Object);
-            await ns.PushAsync<ImplementsBaseViewModel>(new object(),true);
+            await ns.PushAsync<ImplementsBaseViewModel, object>(new object(),true);
             navigation.VerifyAll();
+            ViewModelLocator.Ioc = null;
+
         }
 
         //todo PushAsync_TargetImplementsIPushed_ExecutesOnViewPushedAsync()
@@ -54,11 +60,18 @@ namespace ZenMvvm.Tests
         [Fact]
         public async Task PushModelAsyncWithData_Always_ExecutesINavigationPushModelAsync()
         {
+            var mockIoc = new Mock<IIoc>();
+            mockIoc.Setup(i => i.Resolve(typeof(ImplementsBaseViewModel))).Returns(new Mock<ImplementsBaseViewModel>().Object);
+            ViewModelLocator.Ioc = mockIoc.Object;
+
             var navigation = new Mock<INavigation>();
             navigation.Setup(o => o.PushModalAsync(It.IsAny<ImplementsBasePage>(), true)).Verifiable();
             var ns = new NavigationService(navigation.Object);
-            await ns.PushModalAsync<ImplementsBaseViewModel>(new object(),true);
+            await ns.PushModalAsync<ImplementsBaseViewModel, object>(new object(),true);
             navigation.VerifyAll();
+
+            ViewModelLocator.Ioc = null;
+            
         }
 
         //todo PushModalAsync_TargetImplementsIPushed_ExecutesOnViewPushedAsync()

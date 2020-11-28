@@ -40,7 +40,7 @@ namespace ZenMvvm.Helpers
             {
                 action();
             }
-            catch (TException ex) when (SafeExecutionHelpers.DefaultExceptionHandler != null || onException != null)
+            catch (TException ex) when (SafeExecutionHelpers.Settings.DefaultExceptionHandler != null || onException != null)
             {
                 SafeExecutionHelpers.HandleException(ex, onException);
             }

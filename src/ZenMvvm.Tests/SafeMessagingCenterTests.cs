@@ -489,7 +489,7 @@ namespace ZenMvvm.Tests
         //        WasSubscribeCalled = true;
         //    }
 
-        //    public void UnfilteredSubscribe(object subscriber, string message, Func<object, Task> callback, Action<Exception> onException = null, IViewModelBase viewModel = null)
+        //    public void UnfilteredSubscribe(object subscriber, string message, Func<object, Task> callback, Action<Exception> onException = null, IBusy viewModel = null)
         //    {
         //        WasSubscribeCalled = true;
         //    }

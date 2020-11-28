@@ -17,9 +17,9 @@ namespace ZenMvvm.Tests
         {
             SpecificException specificException = new SpecificException();
 
-            SafeExecutionHelpers.Initialize();
+            SafeExecutionHelpers.RevertToDefaultImplementation();
             var mockHelpers = new Mock<ISafeExecutionHelpers>();
-            SafeExecutionHelpers.SetImplementation(mockHelpers.Object);
+            SafeExecutionHelpers.Implementation = mockHelpers.Object;
 
             var dts = new DeterministicTaskScheduler(shouldThrowExceptions: false);
             var sut = new SafeTask();
@@ -47,9 +47,9 @@ namespace ZenMvvm.Tests
             SpecificException specificException = new SpecificException();
             Action<Exception> onException = new Mock<Action<Exception>>().Object;
 
-            SafeExecutionHelpers.Initialize();
+            SafeExecutionHelpers.RevertToDefaultImplementation();
             var mockHelpers = new Mock<ISafeExecutionHelpers>();
-            SafeExecutionHelpers.SetImplementation(mockHelpers.Object);
+            SafeExecutionHelpers.Implementation = mockHelpers.Object;
 
             var dts = new DeterministicTaskScheduler(shouldThrowExceptions: false);
             var sut = new SafeTask();
@@ -77,13 +77,13 @@ namespace ZenMvvm.Tests
             SpecificException specificException = new SpecificException();
             Action<Exception> defaultExceptionHandler = new Mock<Action<Exception>>().Object;
 
-            SafeExecutionHelpers.Initialize();
+            SafeExecutionHelpers.RevertToDefaultImplementation();
             var mockHelpers = new Mock<ISafeExecutionHelpers>();
 
             //Crux - DefaultHandler returns non-null delegate
-            mockHelpers.SetupGet(h => h.DefaultExceptionHandler).Returns(defaultExceptionHandler);
+            mockHelpers.SetupGet(h => h.Settings.DefaultExceptionHandler).Returns(defaultExceptionHandler);
 
-            SafeExecutionHelpers.SetImplementation(mockHelpers.Object);
+            SafeExecutionHelpers.Implementation = mockHelpers.Object;
 
             var dts = new DeterministicTaskScheduler(shouldThrowExceptions: false);
             var sut = new SafeTask();
@@ -102,7 +102,7 @@ namespace ZenMvvm.Tests
             Assert.Contains(specificException, dts.Exceptions);
             mockHelpers.Verify(h => h.HandleException<Exception>(specificException,null));
 
-            SafeExecutionHelpers.RevertToDefaultImplementation();
+            SafeExecutionHelpers.Implementation = mockHelpers.Object;
         }
 
 

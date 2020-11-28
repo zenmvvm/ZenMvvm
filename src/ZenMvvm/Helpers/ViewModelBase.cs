@@ -3,7 +3,7 @@
     /// <summary>
     /// Commonly used Properties in ViewModel that Raise PropertyChanged event
     /// </summary>
-    public abstract class ViewModelBase : ObservableObject, IViewModelBase
+    public abstract class ViewModelBase : ObservableObject, IBusy
     {
         string title = string.Empty;
         /// <summary>

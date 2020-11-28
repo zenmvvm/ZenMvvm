@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Xunit;
 using ZenMvvm.Helpers;
 using System.Threading.Tasks;
@@ -442,7 +442,7 @@ namespace ZenMvvm.Tests
         }
 
         [Fact]
-        public void ExecuteT_IViewModelBase_CalledTwice_FiresOnceIfBusy()
+        public void ExecuteT_IBusy_CalledTwice_FiresOnceIfBusy()
         {
             int times = 0;
             async Task MockTask(string text)
@@ -451,7 +451,7 @@ namespace ZenMvvm.Tests
                 times++;
             }
 
-            var mockVm = new Mock<IViewModelBase>();
+            var mockVm = new Mock<IBusy>();
 
             var dts = new DeterministicTaskScheduler(shouldThrowExceptions: false);
             ICommand command = new SafeCommand<string>(MockTask, dts, mockVm.Object);
@@ -467,7 +467,7 @@ namespace ZenMvvm.Tests
         }
 
         [Fact]
-        public void ExecuteT_IViewModelBase_isBlockingFalse_IsBusyPropertyUpdates()
+        public void ExecuteT_IBusy_isBlockingFalse_IsBusyPropertyUpdates()
         {
             int times = 0;
             async Task MockTask(string text)
@@ -476,7 +476,7 @@ namespace ZenMvvm.Tests
                 times++;
             }
 
-            var mockVm = new Mock<IViewModelBase>();
+            var mockVm = new Mock<IBusy>();
 
             var dts = new DeterministicTaskScheduler(shouldThrowExceptions: false);
             ICommand command = new SafeCommand<string>(MockTask, dts, mockVm.Object);

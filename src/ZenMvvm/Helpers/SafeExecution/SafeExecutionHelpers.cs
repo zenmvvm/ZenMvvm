@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using Xamarin.Forms;
 
@@ -10,144 +12,215 @@ using Xamarin.Forms;
 namespace ZenMvvm.Helpers
 {
     /// <summary>
-    /// Affects the behaviour of <see cref="SafeCommand"/>,
+    /// Configurable Exception Handler for the collection of safe helpers
+    /// : <see cref="SafeCommand"/>,
     /// <see cref="SafeTaskExtensions"/> and <see cref="SafeActionExtensions"/>
     /// </summary>
-    public class SafeExecutionHelpers : ISafeExecutionHelpers
+    public sealed class SafeExecutionHelpers : ISafeExecutionHelpers
     {
         #region For Unit Testing
+        internal SafeExecutionHelpers()
+        {
+            //Have to use field initializers
+        }
 
-        private static readonly ISafeExecutionHelpers defaultImplementation = new SafeExecutionHelpers();
+        private static readonly Lazy<ISafeExecutionHelpers> defaultImplementation = new Lazy<ISafeExecutionHelpers>(() => new SafeExecutionHelpers());
+        /// <summary>
+        /// Singleton implementation which may be over-ridden by internal test class for mocking purposes
+        /// </summary>        
+        internal static ISafeExecutionHelpers Implementation { get; set; }
+            = defaultImplementation.Value;
 
         /// <summary>
-        /// For unit testing / mocking
+        /// Reverts <see cref="Implementation"/> to its default
         /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public static void SetImplementation(ISafeExecutionHelpers implementation)
-            => Instance = implementation;
-
-
-        /// <summary>
-        /// For unit testing / mocking
-        /// </summary>
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public static void RevertToDefaultImplementation()
-            => Instance = defaultImplementation;
+        internal static void RevertToDefaultImplementation()
+            => Implementation = defaultImplementation.Value;
 
         #endregion
-        /// <summary>
-        /// Singleton Instance
-        /// </summary>
-        public static ISafeExecutionHelpers Instance { get; private set; } = defaultImplementation;
-
-        static bool _shouldAlwaysRethrowException;
 
         /// <summary>
-        /// The default action to execute when an exception is caught by
-        /// <see cref="SafeTaskExtensions"/>, <see cref="SafeActionExtensions"/>
-        /// , and <see cref="SafeCommand"/>
+        /// Configurable Settings for the <see cref="SafeExecutionHelpers"/> class.
         /// </summary>
-        public static Action<Exception> DefaultExceptionHandler //{ get; private set; }
-            => Instance.DefaultExceptionHandler;
-
-        Action<Exception> _defaultExceptionHandler;
-        Action<Exception> ISafeExecutionHelpers.DefaultExceptionHandler
-            => _defaultExceptionHandler;
+        internal static ISafeExecutionSettings Settings => Implementation.Settings;
+        ISafeExecutionSettings ISafeExecutionHelpers.Settings { get; set; }
+            = SafeExecutionSettings.Default;
 
         /// <summary>
-        /// Initialize SafeExecutionHelpers without a <see cref="DefaultExceptionHandler"/>.
-        ///
-        /// Warning! If no <see cref="DefaultExceptionHandler"/> is set and no
-        /// <c>onException</c> provided in the Safe Task/Action/Command, the exception
-        /// will not be caught and you risk "unsafe" execution.
+        /// Configure <see cref="SafeExecutionHelpers"/> with the given
+        ///  <paramref name="settings"/>
         /// </summary>
-        /// <param name="shouldAlwaysRethrowException">If set to <c>true</c>, after the
-        /// exception has been caught and handled, the exception will always be rethrown.
-        /// Warning: When <c>true</c>, there is no way to catch this exception
-        /// and it will always result in a crash. Recommended only for debugging purposes.
-        /// </param>
-        public static void Initialize(bool shouldAlwaysRethrowException = false)
-            => Instance.Initialize(shouldAlwaysRethrowException);
-        void ISafeExecutionHelpers.Initialize(bool shouldAlwaysRethrowException)
-            => _shouldAlwaysRethrowException = shouldAlwaysRethrowException;
-
-        /// <summary>
-        /// Initialize SafeExecutionHelpers with a <see cref="DefaultExceptionHandler"/>
-        /// </summary>
-        /// <param name="shouldAlwaysRethrowException">If set to <c>true</c>, after the
-        /// exception has been caught and handled, the exception will always be rethrown.
-        /// Warning: When <c>true</c>, there is no way to catch this exception
-        /// and it will always result in a crash. Recommended only for debugging purposes.
-        /// </param>
-        /// <param name="defaultOnException"> The default action to execute
-        /// when an exception is caught by
-        /// <see cref="SafeTaskExtensions"/>, <see cref="SafeActionExtensions"/>
-        /// , and <see cref="SafeCommand"/></param>
-        public static void Initialize(Action<Exception> defaultOnException, bool shouldAlwaysRethrowException = false)
-            => Instance.Initialize(defaultOnException, shouldAlwaysRethrowException);
-        void ISafeExecutionHelpers.Initialize(Action<Exception> defaultOnException, bool shouldAlwaysRethrowException)
+        /// <param name="settings">The <see cref="ISafeExecutionSettings"/></param>
+        public static void Configure(ISafeExecutionSettings settings)
+            => Implementation.Configure(settings);
+        void ISafeExecutionHelpers.Configure(ISafeExecutionSettings settings)
         {
-            _shouldAlwaysRethrowException = shouldAlwaysRethrowException;
-            _defaultExceptionHandler = defaultOnException;
+            Implementation.Settings = settings;
+        }
+
+        /// <summary>
+        /// Configure <see cref="SafeExecutionHelpers"/> with the given
+        /// <paramref name="configureSettings"/>
+        /// </summary>
+        /// <param name="configureSettings">Action which selectively configures <see cref="ISafeExecutionSettings"/></param>
+        public static void Configure(Action<ISafeExecutionSettings> configureSettings)
+            => Implementation.Configure(configureSettings);
+        void ISafeExecutionHelpers.Configure(Action<ISafeExecutionSettings> configureSettings)
+        {
+            configureSettings(Settings);
         }
 
 
         /// <summary>
-        /// Removes the <see cref="DefaultExceptionHandler"/>
+        /// Removes the <see cref="ISafeExecutionSettings.DefaultExceptionHandler"/>
         /// </summary>
         public static void RemoveDefaultExceptionHandler()
-            => Instance.RemoveDefaultExceptionHandler();
+            => Implementation.RemoveDefaultExceptionHandler();
         void ISafeExecutionHelpers.RemoveDefaultExceptionHandler()
-            => _defaultExceptionHandler = null;
+            => Settings.DefaultExceptionHandler = null;
 
         /// <summary>
-        /// Set the default action for SafeFireAndForget to handle every exception
+        /// Set the <see cref="ISafeExecutionSettings.DefaultExceptionHandler"/> to the given <paramref name="onException"/>
         /// </summary>
-        /// <param name="onException">If an exception is thrown in the Task using SafeFireAndForget, <c>onException</c> will execute</param>
+        /// <param name="onException">The default exception handler</param>
         public static void SetDefaultExceptionHandler(Action<Exception> onException)
-            => Instance.SetDefaultExceptionHandler(onException);
+            => Implementation.SetDefaultExceptionHandler(onException);
         void ISafeExecutionHelpers.SetDefaultExceptionHandler(Action<Exception> onException)
         {
             if (onException is null)
                 throw new ArgumentNullException(nameof(onException));
 
-            _defaultExceptionHandler = onException;
+            Settings.DefaultExceptionHandler = onException;
         }
 
         /// <summary>
         /// Invoke the given <paramref name="onException"/> callback if
         /// exception is of type <typeparamref name="TException"/>.
         /// If <paramref name="onException"/> is not executed, the
-        /// <see cref="DefaultExceptionHandler"/> will be called
+        /// <see cref="ISafeExecutionSettings.DefaultExceptionHandler"/> will be called
         /// if it was Initialized
         /// </summary>
         /// <typeparam name="TException"></typeparam>
-        /// <param name="exception"></param>
-        /// <param name="onException"></param>
+        /// <param name="exception">the exception</param>
+        /// <param name="onException">the exception handler</param>
         public static void HandleException<TException>(Exception exception, Action<TException> onException)
             where TException : Exception
-            => Instance.HandleException(exception, onException);
+            => Implementation.HandleException(exception, onException);
         void ISafeExecutionHelpers.HandleException<TException>(Exception exception, Action<TException> onException)
         {
             if (exception is InvalidCommandParameterException)
                 throw exception; //internal exception from SafeCommand
 
+
+            // One of the following
             if (onException != null && exception is TException)
                 onException.Invoke(exception as TException);
-            else
-                DefaultExceptionHandler?.Invoke(exception);
 
-            if (_shouldAlwaysRethrowException)
+            else if (Settings.GenericExceptionHandlers.TryGet(exception.GetType(), out Action<Exception> genericHandler))
+                genericHandler.Invoke(exception);
+
+            else if (Settings.DefaultExceptionHandler != null)
+                Settings.DefaultExceptionHandler.Invoke(exception);
+
+            else
+                Device.BeginInvokeOnMainThread(()=>throw new SafeExecutionHelpersException(exception));
+
+
+            if (Settings.ShouldAlwaysRethrowException)
                 Device.BeginInvokeOnMainThread(() => throw exception);
         }
 
         /// <summary>
         /// Invoke the 
-        /// <see cref="DefaultExceptionHandler"/> if it was Initialized
+        /// <see cref="ISafeExecutionSettings.DefaultExceptionHandler"/> if it was Initialized
         /// </summary>
         public static void HandleException(Exception exception)
-            => Instance.HandleException(exception);
+            => Implementation.HandleException(exception);
         void ISafeExecutionHelpers.HandleException(Exception exception)
-            => Instance.HandleException<Exception>(exception, null);
+            => Implementation.HandleException<Exception>(exception, null);
+    }
+
+    /// <summary>
+    /// Configurable Settings for the <see cref="SafeExecutionHelpers"/>
+    /// </summary>
+    public interface ISafeExecutionSettings
+    {
+        /// <summary>
+        /// Once handled, the exception will always be re-thrown.
+        /// Use for debugging purposes. Default value is false. 
+        /// </summary>
+        bool ShouldAlwaysRethrowException { get; set; }
+
+        /// <summary>
+        /// A collection of default exception handlers for specific exception types
+        /// </summary>
+        ExceptionHandlerDictionary GenericExceptionHandlers { get; set; }
+
+        /// <summary>
+        /// The fallback default exception handler.
+        /// Commonly this will log the exception or write to console.
+        /// </summary>
+        Action<Exception> DefaultExceptionHandler { get; set; }
+    }
+
+    ///<inheritdoc/>
+    public class SafeExecutionSettings : ISafeExecutionSettings
+    {
+        private static readonly Lazy<SafeExecutionSettings> defaultSettings =
+            new Lazy<SafeExecutionSettings>(() => new SafeExecutionSettings());
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SafeExecutionSettings"/> class.
+        /// </summary>
+        public SafeExecutionSettings()
+        {
+            ShouldAlwaysRethrowException = false;
+        }
+
+        /// <summary>
+        /// Returns the default settings
+        /// </summary>
+        public static ISafeExecutionSettings Default => defaultSettings.Value;
+
+        ///<inheritdoc/>
+        public bool ShouldAlwaysRethrowException { get; set; }
+
+        ///<inheritdoc/>
+        public Action<Exception> DefaultExceptionHandler { get; set; }
+
+        ///<inheritdoc/>
+        public ExceptionHandlerDictionary GenericExceptionHandlers { get; set; } = new ExceptionHandlerDictionary();
+    }
+
+    public class ExceptionHandlerDictionary
+    {
+        private readonly ConcurrentDictionary<Type, Action<Exception>> dictionary = new ConcurrentDictionary<Type, Action<Exception>>();
+
+        public void Add<T>(Action<T> action) where T : Exception
+            => dictionary.TryAdd(typeof(T), new Action<Exception>(o=>action((T)o)));
+
+        public void Remove<T>() where T : Exception
+            => dictionary.TryRemove(typeof(T), out _);
+
+        public bool TryGet<T>(Type exceptionType, out Action<T> handler) where T : Exception
+        {
+            if (dictionary.TryGetValue(exceptionType, out Action<Exception> value))
+            {
+                handler = value;
+                return true;
+            }
+            else
+            {
+                handler = null;
+                return false;
+            }
+        }
+    }
+
+    public class SafeExecutionHelpersException : Exception
+    {
+        public SafeExecutionHelpersException(Exception exception) : base($"Uncaught exception, '{exception.GetType().Name}'. Add the appropriate handler, or set a DefaultExceptionHandler to catch all unhandled exceptions ({nameof(SafeExecutionHelpers)}.{nameof(SafeExecutionHelpers.SetDefaultExceptionHandler)} method)",exception)
+        {
+        }
     }
 }

@@ -18,24 +18,90 @@ namespace ZenMvvm.Tests
         {
             var mockIoc = new Mock<IIoc>();
             mockIoc.Setup(m => m.Resolve(typeof(EmptyViewModel))).Returns(new EmptyViewModel()).Verifiable();
+            
+            ViewModelLocator.Ioc = mockIoc.Object;
+
             var page = new EmptyPage();
-            ViewModelLocator.ContainerImplementation = mockIoc.Object;
+            //Act
             ViewModelLocator.AutoWireViewModel(page);
+
             mockIoc.VerifyAll();
+            ViewModelLocator.Ioc = null;
         }
 
 
         [Fact]
         public void AutoWireViewModel_ViewModelExists_SetsBindingContextToViewModel()
         {
+            //Don't test the ioc
             var mockIoc = new Mock<IIoc>();
-            mockIoc.Setup(m => m.Resolve(typeof(EmptyViewModel))).Returns(new EmptyViewModel());
+            mockIoc.Setup(m => m.Resolve(typeof(EmptyViewModel))).Returns(new EmptyViewModel());            
+            ViewModelLocator.Ioc = mockIoc.Object;
+
             var page = new EmptyPage();
-            ViewModelLocator.ContainerImplementation = mockIoc.Object;
+            //Act
             ViewModelLocator.AutoWireViewModel(page);
+
             Assert.IsType<EmptyViewModel>(page.BindingContext);
+            ViewModelLocator.Ioc = null;
         }
 
+        [Fact]
+        public void WireViewModel_NoArgs_UsesNamingConvention()
+        {
+            //Don't test the ioc
+            var mockIoc = new Mock<IIoc>();
+            mockIoc.Setup(m => m.Resolve(typeof(EmptyViewModel))).Returns(new EmptyViewModel());
+            ViewModelLocator.Ioc = mockIoc.Object;
+
+            var view = new EmptyPage();
+            //Act
+            ViewModelLocator.WireViewModel(view);
+
+            Assert.IsType<EmptyViewModel>(view.BindingContext);
+            Assert.Contains(".ViewModels", view.BindingContext.GetType().FullName);
+            Assert.Contains(".Views", view.GetType().FullName);
+
+            ViewModelLocator.Ioc = null;
+        }
+
+        [Fact]
+        public void WireViewModel_Name_UsesNameSpaceNamingConventionOnly()
+        {
+            //Don't test the ioc
+            var mockIoc = new Mock<IIoc>();
+            mockIoc.Setup(m => m.Resolve(typeof(ImplementsBaseViewModel))).Returns(new ImplementsBaseViewModel());
+            ViewModelLocator.Ioc = mockIoc.Object;
+
+            var view = new EmptyPage();
+            //Act
+            ViewModelLocator.WireViewModel(view, nameof(ImplementsBaseViewModel));
+            
+            Assert.IsType<ImplementsBaseViewModel>(view.BindingContext);
+            Assert.Contains(".ViewModels", view.BindingContext.GetType().FullName);
+            Assert.Contains(".Views", view.GetType().FullName);
+
+            ViewModelLocator.Ioc = null;
+        }
+
+        [Fact]
+        public void WireViewModel_AssemblyQualifiedName_UsesSpecifiedName()
+        {
+            //Don't test the ioc
+            var mockIoc = new Mock<IIoc>();
+            mockIoc.Setup(m => m.Resolve(typeof(TestAssembly.SpecificViewModel))).Returns(new TestAssembly.SpecificViewModel());
+            ViewModelLocator.Ioc = mockIoc.Object;
+
+            var view = new EmptyPage();
+            //Act
+            ViewModelLocator.WireViewModel(view, typeof(TestAssembly.SpecificViewModel).AssemblyQualifiedName);
+
+            Assert.IsType<TestAssembly.SpecificViewModel>(view.BindingContext);
+            Assert.Contains(", ZenMvvm.TestAssembly", view.BindingContext.GetType().AssemblyQualifiedName);
+            Assert.Contains(".Views", view.GetType().FullName);
+
+            ViewModelLocator.Ioc = null;
+        }
         //todo public void AutoWireViewModel_VmIAppearing_WiresOnViewAppearingEvent()
         //todo public void AutoWireViewModel_VmIDisappearing_WiresOnViewAppearingEvent()
 

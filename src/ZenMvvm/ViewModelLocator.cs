@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Reflection;
 using Xamarin.Forms;
-using ZenMvvm.FluentApi;
 using ZenMvvm.Helpers;
 
 namespace ZenMvvm
@@ -12,32 +11,38 @@ namespace ZenMvvm
     /// </summary>
     public static class ViewModelLocator
     {
-        static readonly IIoc defaultContainerImplementation = new SmartDi2IIocAdapter();
         /// <summary>
-        /// Overrides <see cref="Ioc"/> with the chosen <see cref="IIoc"/>
+        /// ViewModelLocator settings
         /// </summary>
-        public static IIoc ContainerImplementation { private get; set; } = defaultContainerImplementation;
+        internal static readonly ViewModelLocatorSettings settings = new ViewModelLocatorSettings(); //field initialized before ctor
+
+        #region UnitTesting Helper
+        //private static IIoc DefaultContainer() => new SmartDi2IIocAdapter();
+        ///// <summary>
+        ///// Overrides <see cref="Ioc"/> with the chosen <see cref="IIoc"/>
+        ///// </summary>
+        //internal static IIoc ContainerImplementation { private get; set; } = DefaultContainer();
 
         /// <summary>
         /// Dependency injection container
         /// </summary>
-        static IIoc Ioc => ContainerImplementation;
+        public static IIoc Ioc { get; set; }//=> ContainerImplementation;
 
-        /// <summary>
-        /// Customises configuration
-        /// </summary>
-        /// <returns></returns>
-        public static ConfigOptions Configure()
-        {
-            return new ConfigOptions();
-        }
+        ///// <summary>
+        ///// Revert to default IIoc
+        ///// </summary>
+        //internal static void ResetContainerImplementationToDefault()
+        //    => ContainerImplementation = DefaultContainer();
+        #endregion
 
+
+#region AutoWireViewModel
         /// <summary>
         /// Tells the <see cref="ViewModelLocator"/> to attach the corresponding ViewModel
         /// </summary>
         public static readonly BindableProperty AutoWireViewModelProperty =
             BindableProperty.CreateAttached("AutoWireViewModel", typeof(bool), typeof(ViewModelLocator), default(bool)
-                , propertyChanged: OnAutoWireViewModelChanged);
+                , propertyChanged: OnWireViewModelChanged);
 
         /// <summary>
         /// Gets the <see cref="AutoWireViewModelProperty"/>
@@ -69,19 +74,70 @@ namespace ZenMvvm
                 WireViewModel(view);
         }
 
-        private static void OnAutoWireViewModelChanged(BindableObject bindable, object oldValue, object newValue)
+#endregion
+
+#region WireSpecificViewModel
+        /// <summary>
+        /// Tells the <see cref="ViewModelLocator"/> to attach the ViewModel type specified by the given name.
+        /// Provide either the ViewModel's simple type name (in which case
+        /// the default namespace will be assumed), or the ViewModel's full assembly
+        /// qualified name.
+        /// </summary>
+        public static readonly BindableProperty WireSpecificViewModelProperty =
+            BindableProperty.CreateAttached("WireSpecificViewModel", typeof(string), typeof(ViewModelLocator), default(string), propertyChanged: OnWireViewModelChanged);
+
+        /// <summary>
+        /// Gets the <see cref="WireSpecificViewModelProperty"/>
+        /// </summary>
+        /// <param name="bindable"></param>
+        /// <returns></returns>
+        public static string GetWireSpecificViewModel(BindableObject bindable)
+            => (string)bindable.GetValue(WireSpecificViewModelProperty);
+
+        /// <summary>
+        /// Sets the <see cref="WireSpecificViewModelProperty"/>
+        /// </summary>
+        /// <param name="bindable"></param>
+        /// <param name="value"></param>
+        public static void SetWireSpecificViewModel(BindableObject bindable, string value)
+            => bindable.SetValue(WireSpecificViewModelProperty, value);
+
+        /// <summary>
+        /// Sets the <paramref name="view"/>'s BindingContext to the specified <paramref name="viewModelName"/>
+        /// </summary>
+        /// <param name="view"></param>
+        /// <param name="viewModelName">Either the ViewModel's simple type name (in which case
+        /// the default namespace will be assumed), or the ViewModel's full assembly
+        /// qualified name.</param>
+        public static void AutoWireViewModel(Page view, string viewModelName)
+            => SetWireSpecificViewModel(view, viewModelName);
+
+#endregion
+
+        /// <summary>
+        /// PropertyChanged delegate that Wires ViewModel to the View
+        /// </summary>
+        /// <param name="bindable">The view</param>
+        /// <param name="oldValue"></param>
+        /// <param name="newValue"></param>
+        private static void OnWireViewModelChanged(BindableObject bindable, object oldValue, object newValue)
         {
-            if (!(bindable is Element view && (bool)newValue == true))
+            if (!(bindable is Element view))
                 return;
 
-            WireViewModel(view);
+            if(newValue is bool boolean && boolean == true)
+                WireViewModel(view);
+
+            if(newValue is string @string)
+                WireViewModel(view, @string);
         }
 
-        private static void WireViewModel(Element view)
+        internal static void WireViewModel(Element view, string viewModelName = null)
         {
             var viewType = view.GetType();
 
-            var viewModelType = GetViewModelTypeForPage(viewType);
+            var viewModelType = GetViewModelTypeForPage(viewType, viewModelName);
+
             if (viewModelType is null)
                 throw new ViewModelBindingException(viewType);
 
@@ -104,20 +160,41 @@ namespace ZenMvvm
             view.BindingContext = viewModel;
         }
 
-        private static Type GetViewModelTypeForPage(Type pageType)
+        private static Type GetViewModelTypeForPage(Type pageType, string viewModelName = null)
         {
-            var name = pageType.Name.ReplaceLastOccurrence(
-                            Settings.ViewSuffix, Settings.ViewModelSuffix);
+            // if no name given
+            // -> follow conventions to produce assemblyqualifiedname
+            if (string.IsNullOrEmpty(viewModelName))
+            {
+                viewModelName = (pageType.IsGenericType
+                    ? pageType
+                    .GetGenericTypeDefinition()
+                    : pageType)
+                    .Name
+                    .ReplaceLastOccurrence(
+                        settings.ViewSuffix,
+                        settings.ViewModelSuffix);
+            }
 
-            var viewAssemblyName = string.Format(CultureInfo.InvariantCulture
+            // if name provided but not assembly qualified
+            // -> use namespace conventions to produce assemblyqualifiedname
+            if (!viewModelName.Contains(","))
+                viewModelName = string.Format(CultureInfo.InvariantCulture
                 , "{0}.{1}, {2}"
-                , Settings.ViewModelNamespace ??
+                , settings.ViewModelNamespace ??
                     pageType.Namespace
-                    .Replace(Settings.ViewSubNamespace, Settings.ViewModelSubNamespace)
-                , name
-                , Settings.ViewModelAssemblyName ?? pageType.GetTypeInfo().Assembly.FullName);
+                    .Replace(settings.ViewSubNamespace, settings.ViewModelSubNamespace)
+                , viewModelName
+                , settings.ViewModelAssemblyName ?? pageType.GetTypeInfo().Assembly.FullName);
 
-            return Type.GetType(viewAssemblyName);
+            var viewModelType = Type.
+                    GetType(viewModelName);
+
+            //todo test if still works when generic args are generic in themselves
+            return pageType.IsGenericType
+                    ? viewModelType.
+                        MakeGenericType(pageType.GetGenericArguments())
+                    : viewModelType;
         }
     }
 }
