@@ -51,12 +51,15 @@ jobs:
         run: dotnet test -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput="./"
       - name: ReportGenerator
         run: |
-          dotnet tool install -g dotnet-reportgenerator-globaltool
-          reportgenerator "-reports:./**/coverage.cobertura.xml" "-targetdir:./" -reporttypes:Badges
           git config --global user.email "zeebsmail@gmail.com"
           git config --global user.name "z33bs"
-          git add badge_linecoverage.svg --force
-          git commit -m "Update badge"
+          rm badge_linecoverage.svg
+          git add badge_linecoverage.svg
+          git commit -m "Remove old coverage badge"
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          reportgenerator "-reports:./**/coverage.cobertura.xml" "-targetdir:./" -reporttypes:Badges
+          git add badge_linecoverage.svg
+          git commit -m "Add new coverage badge"
           git push
       - name: Use current date for Nightly Package Version
         env:
