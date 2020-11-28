@@ -53,7 +53,7 @@ jobs:
         run: |
           git config --global user.email "zeebsmail@gmail.com"
           git config --global user.name "z33bs"
-          rm coverage/badge_linecoverage.svg
+          rm -f coverage/badge_linecoverage.svg
           git add coverage/badge_linecoverage.svg
           git commit -m "Remove old coverage badge"
           dotnet tool install -g dotnet-reportgenerator-globaltool
