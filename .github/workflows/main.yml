@@ -28,12 +28,9 @@ env:
   #NIGHTLY_PACKAGE_VERSION -> will be set in script
 jobs:
   build:    
-    if: github.ref != 'refs/heads/develop' && github.event_name != 'release'
     runs-on: ${{ matrix.os }}
-    strategy:
-        
+    strategy:        
         matrix:
-
         #os: [ ubuntu-latest, windows-latest, macos-latest ]
           os: [ ubuntu-latest ]
     steps:
@@ -47,7 +44,7 @@ jobs:
         run: dotnet restore
       - name: Build
         run: dotnet build -c Release --no-restore
-      - name: Test and Generate Coverage Report
+      - name: Test and Generate Coverage Report w. Coverlet
         run: dotnet test -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput="./"
       - name: ReportGenerator
         run: |
@@ -61,40 +58,36 @@ jobs:
           git add ./coverage/badge_linecoverage.svg
           git commit -m "Add new coverage badge"
           git push
-      - name: Use current date for Nightly Package Version
+      - name: Set NIGHTLY_PACKAGE_VERSION name
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: true        
         run: echo "::set-env name=NIGHTLY_PACKAGE_VERSION::$(date +'0.0.%Y%m%d-%Hh%Mm%S')"
       - name: Pack
         if: matrix.os == 'ubuntu-latest'
         run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$NIGHTLY_PACKAGE_VERSION src/$PROJECT_NAME/$PROJECT_NAME.*proj
-      - name: Upload Artifact
+      - name: Upload Nupkg Artifact
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v2
         with:
           name: nupkg
           path: ./src/${{ env.PROJECT_NAME }}/bin/Release/*.nupkg
-      - name: Upload Artifact
+      - name: Upload Code Coverage Artifact
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v2
         with:
-          name: coverage
+          name: cov
           path: ./coverage/*.*          
-      - name: Predictable link to badges
+      - name: Update Nightly Release with Assets - Coverage Report and Nupkg
         uses: eine/tip@master
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: 'nightly'
           files: |
-            ./*.*
-      - name: Download Artifact if pre-develop
-        if: matrix.os == 'ubuntu-latest' && github.ref != 'refs/heads/develop' && github.event_name != 'release'
-        uses: actions/download-artifact@v1
-        with:
-          name: nupkg
+            ./coverage/*.*
+            ./src/${{ env.PROJECT_NAME }}/bin/Release/*.nupkg
       - name: If pre-develop, upload Bleeding Edge Package to MyGet
         if: matrix.os == 'ubuntu-latest' && github.ref != 'refs/heads/develop' && github.event_name != 'release'
-        run: dotnet nuget push ./nupkg/*.nupkg --source $MYGET_FEED --skip-duplicate --api-key $MYGET_KEY
+        run: dotnet nuget push ./src/${{ env.PROJECT_NAME }}/bin/Release/*.nupkg --source $MYGET_FEED --skip-duplicate --api-key $MYGET_KEY
 
   dependabotautomerge:
     # from https://github.com/dependabot/dependabot-core/issues/1973
@@ -118,6 +111,7 @@ jobs:
               pull_number: context.payload.pull_request.number
             })
           github-token: ${{github.token}}
+  
   prerelease:
     needs: build
     if: github.ref == 'refs/heads/develop'
@@ -127,16 +121,9 @@ jobs:
       uses: actions/download-artifact@v1
       with:
         name: nupkg
-#     - name: Push to GitHub Feed
-#       run: |
-#         for f in ./nupkg/*.nupkg
-#         do
-#           curl -vX PUT -u "$GITHUB_USER:$GITHUB_TOKEN" -F package=@$f $GITHUB_FEED
-#         done
     - name: Publish Nuget to GitHub Feed
       run: dotnet nuget push ./nupkg/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_FEED --skip-duplicate
-#     - name: Push to MyGet Feed
-#       run: dotnet nuget push ./nupkg/*.nupkg --source $MYGET_FEED --skip-duplicate --api-key $MYGET_KEY
+
   deploy:
     needs: build
     if: github.event_name == 'release'
@@ -155,13 +142,23 @@ jobs:
           VERSION="${VERSION//v}"
           echo Clean Version: $VERSION
           dotnet pack -v normal -c Release --include-symbols --include-source -p:PackageVersion=$VERSION -o nupkg src/$PROJECT_NAME/$PROJECT_NAME.*proj
-#       - name: Push to GitHub Feed
-#         run: |
-#           for f in ./nupkg/*.nupkg
-#           do
-#             curl -vX PUT -u "$GITHUB_USER:$GITHUB_TOKEN" -F package=@$f $GITHUB_FEED
-#           done
       - name: Publish Nuget to GitHub Feed
         run: dotnet nuget push ./nupkg/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_FEED --skip-duplicate          
       - name: Push to NuGet Feed
         run: dotnet nuget push ./nupkg/*.nupkg --source $NUGET_FEED --skip-duplicate --api-key $NUGET_KEY
+      - name: Download Coverage Artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: cov
+      - name: Update coverage badge for readme
+        run: |
+          git config --global user.email "zeebsmail@gmail.com"
+          git config --global user.name "z33bs"
+          rm -f ./coverage/badge_linecoverage.svg
+          git add ./coverage/badge_linecoverage.svg
+          git commit -m "Remove old coverage badge"
+          cp ./cov/badge_linecoverage.svg ./coverage/badge_linecoverage.svg
+          git add ./coverage/badge_linecoverage.svg
+          git commit -m "Add new coverage badge"
+          git push
+
