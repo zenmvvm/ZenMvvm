@@ -161,4 +161,3 @@ jobs:
           git add ./coverage/badge_linecoverage.svg
           git commit -m "Add new coverage badge"
           git push
-
