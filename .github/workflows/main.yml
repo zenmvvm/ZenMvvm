@@ -53,12 +53,12 @@ jobs:
         run: |
           git config --global user.email "zeebsmail@gmail.com"
           git config --global user.name "z33bs"
-          rm -f coverage/badge_linecoverage.svg
-          git add coverage/badge_linecoverage.svg
+          rm -f ./coverage/badge_linecoverage.svg
+          git add ./coverage/badge_linecoverage.svg
           git commit -m "Remove old coverage badge"
           dotnet tool install -g dotnet-reportgenerator-globaltool
           reportgenerator "-reports:./**/coverage.cobertura.xml" "-targetdir:./coverage" -reporttypes:Badges;HtmlInline
-          git add coverage/badge_linecoverage.svg
+          git add ./coverage/badge_linecoverage.svg
           git commit -m "Add new coverage badge"
           git push
       - name: Use current date for Nightly Package Version
