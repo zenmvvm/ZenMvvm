@@ -46,7 +46,8 @@ jobs:
         run: dotnet build -c Release --no-restore
       - name: Test and Generate Coverage Report w. Coverlet
         run: dotnet test -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura /p:CoverletOutput="./"
-      - name: ReportGenerator
+      - name: Run ReportGenerator if develop/deploy
+        if: matrix.os == 'ubuntu-latest' && (github.ref == 'refs/heads/develop' || github.event_name == 'release')
         run: |
           git config --global user.email "zeebsmail@gmail.com"
           git config --global user.name "z33bs"
@@ -58,6 +59,12 @@ jobs:
           git add ./coverage/badge_linecoverage.svg
           git commit -m "Add new coverage badge"
           git push
+      - name: Upload Code Coverage Report Artifact if Run
+        if: matrix.os == 'ubuntu-latest' && (github.ref == 'refs/heads/develop' || github.event_name == 'release')
+        uses: actions/upload-artifact@v2
+        with:
+          name: cov
+          path: ./coverage/*.*                    
       - name: Set NIGHTLY_PACKAGE_VERSION name
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: true        
@@ -71,13 +78,7 @@ jobs:
         with:
           name: nupkg
           path: ./src/${{ env.PROJECT_NAME }}/bin/Release/*.nupkg
-      - name: Upload Code Coverage Artifact
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v2
-        with:
-          name: cov
-          path: ./coverage/*.*          
-      - name: If pre-develop, upload Bleeding Edge Package to MyGet
+      - name: If not develop or release, upload Bleeding Edge Package to MyGet
         if: matrix.os == 'ubuntu-latest' && github.ref != 'refs/heads/develop' && github.event_name != 'release'
         run: dotnet nuget push ./src/${{ env.PROJECT_NAME }}/bin/Release/*.nupkg --source $MYGET_FEED --skip-duplicate --api-key $MYGET_KEY
 
