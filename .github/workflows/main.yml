@@ -55,7 +55,7 @@ jobs:
           reportgenerator "-reports:./**/coverage.cobertura.xml" "-targetdir:./" -reporttypes:Badges
           git config --global user.email "zeebsmail@gmail.com"
           git config --global user.name "z33bs"
-          git add badge_linecoverage.svg
+          git add badge_linecoverage.svg --force
           git commit -m "Update badge"
           git push
       - name: Use current date for Nightly Package Version
