@@ -131,14 +131,14 @@ jobs:
         run: dotnet nuget push ./nupkg/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_FEED --skip-duplicate          
       - name: Push to NuGet Feed
         run: dotnet nuget push ./nupkg/*.nupkg --source $NUGET_FEED --skip-duplicate --api-key $NUGET_KEY
-      - name: Download Coverage Artifact
-        uses: actions/download-artifact@v1
-        with:
-          name: cov
       - name: Checkout master branch
         uses: actions/checkout@v2
         with:
           ref: master
+      - name: Download Coverage Artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: cov
       - name: Update coverage badge for readme
         run: |
           git config --global user.email "zeebsmail@gmail.com"
