@@ -53,12 +53,12 @@ jobs:
         run: |
           git config --global user.email "zeebsmail@gmail.com"
           git config --global user.name "z33bs"
-          rm badge_linecoverage.svg
-          git add badge_linecoverage.svg
+          rm coverage/badge_linecoverage.svg
+          git add coverage/badge_linecoverage.svg
           git commit -m "Remove old coverage badge"
           dotnet tool install -g dotnet-reportgenerator-globaltool
-          reportgenerator "-reports:./**/coverage.cobertura.xml" "-targetdir:./" -reporttypes:Badges
-          git add badge_linecoverage.svg
+          reportgenerator "-reports:./**/coverage.cobertura.xml" "-targetdir:./coverage" -reporttypes:Badges;HtmlInline
+          git add coverage/badge_linecoverage.svg
           git commit -m "Add new coverage badge"
           git push
       - name: Use current date for Nightly Package Version
@@ -78,15 +78,15 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v2
         with:
-          name: badges
-          path: ./badge_*.*          
+          name: coverage
+          path: ./coverage/*.*          
       - name: Predictable link to badges
         uses: eine/tip@master
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: 'nightly'
           files: |
-            ./badge_*.*
+            ./*.*
       - name: Download Artifact if pre-develop
         if: matrix.os == 'ubuntu-latest' && github.ref != 'refs/heads/develop' && github.event_name != 'release'
         uses: actions/download-artifact@v1
