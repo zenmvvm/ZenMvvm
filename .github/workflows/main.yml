@@ -77,14 +77,6 @@ jobs:
         with:
           name: cov
           path: ./coverage/*.*          
-      - name: Update Nightly Release with Assets - Coverage Report and Nupkg
-        uses: eine/tip@master
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: 'nightly'
-          files: |
-            ./coverage/*.*
-            ./src/${{ env.PROJECT_NAME }}/bin/Release/*.nupkg
       - name: If pre-develop, upload Bleeding Edge Package to MyGet
         if: matrix.os == 'ubuntu-latest' && github.ref != 'refs/heads/develop' && github.event_name != 'release'
         run: dotnet nuget push ./src/${{ env.PROJECT_NAME }}/bin/Release/*.nupkg --source $MYGET_FEED --skip-duplicate --api-key $MYGET_KEY
