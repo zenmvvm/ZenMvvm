@@ -135,11 +135,14 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: cov
+      - name: Checkout master branch
+        uses: actions/checkout@v2
+        with:
+          ref: master
       - name: Update coverage badge for readme
         run: |
           git config --global user.email "zeebsmail@gmail.com"
           git config --global user.name "z33bs"
-          git switch --discard-changes master
           rm -f ./coverage/badge_linecoverage.svg
           git add ./coverage/badge_linecoverage.svg
           git commit -m "Remove old coverage badge"
