@@ -57,6 +57,7 @@ jobs:
           name: cov
           path: ./coverage/*.*                    
       - name: Set NIGHTLY_PACKAGE_VERSION name
+        if: matrix.os == 'ubuntu-latest'
         env:
           ACTIONS_ALLOW_UNSECURE_COMMANDS: true        
         run: echo "::set-env name=NIGHTLY_PACKAGE_VERSION::$(date +'0.0.%Y%m%d-%Hh%Mm%S')"
