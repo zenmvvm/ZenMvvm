@@ -143,10 +143,12 @@ jobs:
         run: |
           git config --global user.email "zeebsmail@gmail.com"
           git config --global user.name "z33bs"
-          rm -f ./coverage/badge_linecoverage.svg
+          rm -f ./coverage/*.*
           git add ./coverage/badge_linecoverage.svg
+          git add ./coverage/index.html
           git commit -m "Remove old coverage badge"
           cp ./cov/badge_linecoverage.svg ./coverage/badge_linecoverage.svg
-          git add ./coverage/badge_linecoverage.svg
+          cp ./cov/index.html ./coverage/index.html
+          git add ./coverage/*.*
           git commit -m "Add new coverage badge"
           git push
