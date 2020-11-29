@@ -1,7 +1,7 @@
 # ![Logo](src/ZenMvvm/Art/icon.png) ZenMVVM
 Lightweight **ViewModel-First** MVVM framework for Xamarin.Forms
 
-![Coverage](https://raw.githubusercontent.com/zenmvvm/ZenMvvm/master/coverage/badge_linecoverage.svg)
+[![Coverage](https://raw.githubusercontent.com/zenmvvm/ZenMvvm/master/coverage/badge_linecoverage.svg)](https://htmlpreview.github.io/?https://raw.githubusercontent.com/zenmvvm/ZenMvvm/develop/coverage/index.html)
 
 *See the [ZenMvvm Sample App](https://github.com/z33bs/ZenMvvm-Sample-App#readme) and [Zenimals Sample App](https://github.com/z33bs/Zenimals-Sample-App#readme) for ZenMvvm in action*
 
