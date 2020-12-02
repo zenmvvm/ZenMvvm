@@ -1,1 +1,1 @@
-coverage/ linguist-language=java
+coverage/* linguist-language=java
