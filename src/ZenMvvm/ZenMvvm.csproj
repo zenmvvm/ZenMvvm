@@ -1,20 +1,42 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- General -->
+    <AssemblyName>ZenMvvm</AssemblyName>
+    <Description>Lightweight ViewModel-First MVVM framework for Xamarin.Forms. With ZenMvvm you can use a ViewModel-First pattern while keeping the power and familiarity of Xamarin Forms. The result? More readable and maintainable code, and a stronger separation of concerns.</Description>
+    <Copyright>Copyright 2020 ZenMvvm</Copyright>
+    <Authors>Guy Antoine and contributors</Authors>
+    <NeutralLanguage>en-GB</NeutralLanguage>
+
+    <!-- Build settings -->
     <TargetFrameworks>netstandard2.0;net5.0</TargetFrameworks>
+    <LangVersion>9.0</LangVersion>
+
+    <!-- NuGet settings -->
+    <PackageId>ZenMvvm</PackageId>
+    <PackageTags>ioc;dependency-injection;mvvm;inversion-of-control;xamarin-forms;viewmodel-first-navigation;xamarin-forms-mvvm;viewmodel-first;zenmvvm</PackageTags> <!-- separate with ; -->
+    <PackageReleaseNotes>https://github.com/zenmvvm/ZenMvvm/releases</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/zenmvvm/ZenMvvm</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/zenmvvm/ZenMvvm</RepositoryUrl>	  
+    <RepositoryUrl>https://github.com/zenmvvm/ZenMvvm</RepositoryUrl>     
+    <PackageIcon>icon.png</PackageIcon> <!-- See <ItemGroup> for path to file -->
+
+    <!-- SourceLink settings -->
+    <!-- Allows debugger to step into code of nuget package -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>     
+    <IncludeSymbols>true</IncludeSymbols>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <LangVersion>9.0</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <LangVersion>9.0</LangVersion>
-  </PropertyGroup>
-<ItemGroup>
-	<PackageReference Include="Xamarin.Forms" Version="4.5.0.356" />
-</ItemGroup>
-<ItemGroup>
-  <Compile Remove="IocAdapter.cs" />
-</ItemGroup>
+  
+  <ItemGroup>
+    <None Include="./Art/icon.png">
+        <Pack>true</Pack>
+        <PackagePath>$(PackageIconUrl)</PackagePath>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Xamarin.Forms" Version="4.5.0.356" />
+  </ItemGroup>
 </Project>

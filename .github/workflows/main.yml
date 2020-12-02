@@ -146,11 +146,11 @@ jobs:
           git config --global user.email $GITHUB_USER_EMAIL
           git config --global user.name $GITHUB_USER
           rm -f ./coverage/*.*
-          git add ./coverage/badge_linecoverage.svg
-          git add ./coverage/index.html
+          git add --force ./coverage/badge_linecoverage.svg
+          git add --force ./coverage/index.html
           git commit -m "Remove old coverage badge"
           cp ./cov/badge_linecoverage.svg ./coverage/badge_linecoverage.svg
           cp ./cov/index.html ./coverage/index.html
-          git add ./coverage/*.*
+          git add --force ./coverage/*.*
           git commit -m "Add new coverage badge"
           git push
