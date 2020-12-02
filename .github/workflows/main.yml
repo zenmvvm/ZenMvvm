@@ -137,10 +137,10 @@ jobs:
         run: dotnet nuget push ./nupkg/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_FEED --skip-duplicate          
       - name: Push to NuGet Feed
         run: dotnet nuget push ./nupkg/*.nupkg --source $NUGET_FEED --skip-duplicate --api-key $NUGET_KEY
-      - name: Checkout main branch
+      - name: Checkout develop branch
         uses: actions/checkout@v2
         with:
-          ref: main
+          ref: develop
       - name: Download Coverage Artifact
         uses: actions/download-artifact@v1
         with:
