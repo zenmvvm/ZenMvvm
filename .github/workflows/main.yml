@@ -81,26 +81,32 @@ jobs:
         run: dotnet nuget push ./src/${{ env.PROJECT_NAME }}/bin/Release/*.nupkg --source $MYGET_FEED --skip-duplicate --api-key $MYGET_KEY
 
   dependabotautomerge:
-    # from https://github.com/dependabot/dependabot-core/issues/1973
+    # from https://localheinz.com/blog/2020/06/15/merging-pull-requests-with-github-actions/
     needs: build
-    if: github.actor == 'dependabot[bot]'
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.draft == false && (
+        github.event.action == 'opened' ||
+        github.event.action == 'reopened' ||
+        github.event.action == 'synchronize'
+      ) && (
+      github.actor == 'dependabot[bot]'
+      )
     runs-on: ubuntu-latest
     steps:
       - name: automerge
         uses: actions/github-script@0.2.0
         with:
           script: |
-            github.pullRequests.createReview({
-              owner: context.payload.repository.owner.login,
-              repo: context.payload.repository.name,
-              pull_number: context.payload.pull_request.number,
-              event: 'APPROVE'
-            })
-            github.pullRequests.merge({
-              owner: context.payload.repository.owner.login,
-              repo: context.payload.repository.name,
-              pull_number: context.payload.pull_request.number
-            })
+            const pullRequest = context.payload.pull_request
+            const repository = context.repo
+
+            await github.pulls.merge({
+              merge_method: "merge",
+              owner: repository.owner,
+              pull_number: pullRequest.number,
+              repo: repository.repo,
+              })
           github-token: ${{github.token}}
   
   prerelease:
@@ -137,10 +143,10 @@ jobs:
         run: dotnet nuget push ./nupkg/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_FEED --skip-duplicate          
       - name: Push to NuGet Feed
         run: dotnet nuget push ./nupkg/*.nupkg --source $NUGET_FEED --skip-duplicate --api-key $NUGET_KEY
-      - name: Checkout main branch
+      - name: Checkout develop branch
         uses: actions/checkout@v2
         with:
-          ref: main
+          ref: develop
       - name: Download Coverage Artifact
         uses: actions/download-artifact@v1
         with:
