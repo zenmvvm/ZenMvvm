@@ -118,6 +118,7 @@ jobs:
       uses: actions/download-artifact@v2.0.6
       with:
         name: nupkg
+        path: nupkg
     - name: Publish Nuget to GitHub Feed
       run: dotnet nuget push ./nupkg/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_FEED --skip-duplicate
 
@@ -151,6 +152,7 @@ jobs:
         uses: actions/download-artifact@v2.0.6
         with:
           name: cov
+          path: cov
       - name: Update coverage badge for readme
         run: |
           git config --global user.email $GITHUB_USER_EMAIL
