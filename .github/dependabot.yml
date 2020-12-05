@@ -9,3 +9,8 @@ updates:
       # We're using the oldest possible Xamarin.Forms and have to match this with Mocks
       - dependency-name: "Xamarin.Forms"
       - dependency-name: "Xamarin.Forms.Mocks"
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
