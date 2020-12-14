@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
+<PropertyGroup>
     <!-- General -->
     <AssemblyName>ZenMvvm</AssemblyName>
     <Description>Lightweight ViewModel-First MVVM framework for Xamarin.Forms. With ZenMvvm you can use a ViewModel-First pattern while keeping the power and familiarity of Xamarin Forms. The result? More readable and maintainable code, and a stronger separation of concerns.</Description>
@@ -17,26 +17,27 @@
     <PackageTags>ioc;dependency-injection;mvvm;inversion-of-control;xamarin-forms;viewmodel-first-navigation;xamarin-forms-mvvm;viewmodel-first;zenmvvm</PackageTags> <!-- separate with ; -->
     <PackageReleaseNotes>https://github.com/zenmvvm/ZenMvvm/releases</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/zenmvvm/ZenMvvm</PackageProjectUrl>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <!-- Choose either PackageLicenseExpression or PackageLicenseFile (but not both) -->
+    <!-- <PackageLicenseExpression>MIT</PackageLicenseExpression> -->
+    <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/zenmvvm/ZenMvvm</RepositoryUrl>     
-    <PackageIcon>icon.png</PackageIcon> <!-- See <ItemGroup> for path to file -->
+    <PackageIcon>icon@64x64.png</PackageIcon> <!-- See <ItemGroup> for path to file -->
 
     <!-- SourceLink settings -->
     <!-- Allows debugger to step into code of nuget package -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>     
     <IncludeSymbols>true</IncludeSymbols>
-  </PropertyGroup>
+</PropertyGroup>
   
-  <ItemGroup>
-    <None Include="./Art/icon.png">
-        <Pack>true</Pack>
-        <PackagePath>$(PackageIconUrl)</PackagePath>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
+<ItemGroup>
+    <None Include="../../art/icon@64x64.png" Pack="true" PackagePath="$(PackageIconUrl)" />
+    <None Include="../../LICENSE.md" Pack="true" PackagePath="" />
+</ItemGroup>
+
+<ItemGroup>
     <PackageReference Include="Xamarin.Forms" Version="4.5.0.356" />
-  </ItemGroup>
+</ItemGroup>
 </Project>
