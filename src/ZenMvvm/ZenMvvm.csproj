@@ -14,7 +14,7 @@
 
     <!-- NuGet settings -->
     <PackageId>ZenMvvm</PackageId>
-    <PackageTags>ioc;dependency-injection;mvvm;inversion-of-control;xamarin-forms;viewmodel-first-navigation;xamarin-forms-mvvm;viewmodel-first;zenmvvm</PackageTags> <!-- separate with ; -->
+    <PackageTags>mvvm;xamarin-forms;ioc;dependency-injection;inversion-of-control;viewmodel-first-navigation;viewmodel-first;zenmvvm</PackageTags> <!-- separate with ; -->
     <PackageReleaseNotes>https://github.com/zenmvvm/ZenMvvm/releases</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/zenmvvm/ZenMvvm</PackageProjectUrl>
     <!-- Choose either PackageLicenseExpression or PackageLicenseFile (but not both) -->
