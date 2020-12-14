@@ -1,4 +1,4 @@
-# ![Logo](src/ZenMvvm/Art/icon.png) ZenMVVM
+# ![Logo](art/icon.png) ZenMvvM
 Lightweight **ViewModel-First** MVVM framework for Xamarin.Forms
 
 [![Coverage](https://raw.githubusercontent.com/zenmvvm/ZenMvvm/main/coverage/badge_linecoverage.svg)](https://htmlpreview.github.io/?https://raw.githubusercontent.com/zenmvvm/ZenMvvm/main/coverage/index.html) [![NuGet](https://buildstats.info/nuget/ZenMvvm?includePreReleases=false)](https://www.nuget.org/packages/ZenMvvm/)
