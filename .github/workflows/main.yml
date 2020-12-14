@@ -115,9 +115,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Download Artifact
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v2.0.6
       with:
         name: nupkg
+        path: nupkg
     - name: Publish Nuget to GitHub Feed
       run: dotnet nuget push ./nupkg/*.nupkg -k $GITHUB_TOKEN -s $GITHUB_FEED --skip-duplicate
 
@@ -148,9 +149,10 @@ jobs:
         with:
           ref: develop
       - name: Download Coverage Artifact
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2.0.6
         with:
           name: cov
+          path: cov
       - name: Update coverage badge for readme
         run: |
           git config --global user.email $GITHUB_USER_EMAIL
