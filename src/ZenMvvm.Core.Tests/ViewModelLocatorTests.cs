@@ -4,6 +4,7 @@ using Moq;
 using Xamarin.Forms;
 using ZenMvvm.Tests.Views;
 using ZenMvvm.Tests.ViewModels;
+using ZenMvvm.TestAssembly;
 
 namespace ZenMvvm.Tests
 {
@@ -97,7 +98,7 @@ namespace ZenMvvm.Tests
             ViewModelLocator.WireViewModel(view, typeof(TestAssembly.SpecificViewModel).AssemblyQualifiedName);
 
             Assert.IsType<TestAssembly.SpecificViewModel>(view.BindingContext);
-            Assert.Contains(", ZenMvvm.TestAssembly", view.BindingContext.GetType().AssemblyQualifiedName);
+            Assert.Contains(", ZenMvvm.Core.TestAssembly", view.BindingContext.GetType().AssemblyQualifiedName);
             Assert.Contains(".Views", view.GetType().FullName);
 
             ViewModelLocator.Ioc = null;

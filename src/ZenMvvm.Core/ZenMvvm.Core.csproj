@@ -2,9 +2,9 @@
 
 <PropertyGroup>
     <!-- General -->
-    <AssemblyName>ZenMvvm</AssemblyName>
-    <Description>Lightweight ViewModel-First MVVM framework for Xamarin.Forms. With ZenMvvm you can use a ViewModel-First pattern while keeping the power and familiarity of Xamarin Forms. The result? More readable and maintainable code, and a stronger separation of concerns.</Description>
-    <Copyright>Copyright 2020 ZenMvvm</Copyright>
+    <AssemblyName>ZenMvvm.Core</AssemblyName>
+    <Description>Lightweight ViewModel-First MVVM framework for Xamarin.Forms. With ZenMvvm.Core you can use a ViewModel-First pattern while keeping the power and familiarity of Xamarin Forms. The result? More readable and maintainable code, and a stronger separation of concerns.</Description>
+    <Copyright>Copyright 2020 ZenMvvm.Core</Copyright>
     <Authors>Guy Antoine and contributors</Authors>
     <NeutralLanguage>en-GB</NeutralLanguage>
 
@@ -13,16 +13,16 @@
     <LangVersion>9.0</LangVersion>
 
     <!-- NuGet settings -->
-    <PackageId>ZenMvvm</PackageId>
+    <PackageId>ZenMvvm.Core</PackageId>
     <PackageTags>mvvm;xamarin-forms;ioc;dependency-injection;inversion-of-control;viewmodel-first-navigation;viewmodel-first;zenmvvm</PackageTags> <!-- separate with ; -->
-    <PackageReleaseNotes>https://github.com/zenmvvm/ZenMvvm/releases</PackageReleaseNotes>
-    <PackageProjectUrl>https://github.com/zenmvvm/ZenMvvm</PackageProjectUrl>
+    <PackageReleaseNotes>https://github.com/zenmvvm/ZenMvvm.Core/releases</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/zenmvvm/ZenMvvm.Core</PackageProjectUrl>
     <!-- Choose either PackageLicenseExpression or PackageLicenseFile (but not both) -->
     <!-- <PackageLicenseExpression>MIT</PackageLicenseExpression> -->
     <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/zenmvvm/ZenMvvm</RepositoryUrl>     
+    <RepositoryUrl>https://github.com/zenmvvm/ZenMvvm.Core</RepositoryUrl>     
     <PackageIcon>icon@64x64.png</PackageIcon> <!-- See <ItemGroup> for path to file -->
 
     <!-- SourceLink settings -->

@@ -11,11 +11,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		azure-pipelines-master.yml = azure-pipelines-master.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZenMvvm", "src\ZenMvvm\ZenMvvm.csproj", "{18FBA6A7-3C3E-4135-B76B-B9BF5818AE67}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZenMvvm.Core", "src\ZenMvvm.Core\ZenMvvm.Core.csproj", "{18FBA6A7-3C3E-4135-B76B-B9BF5818AE67}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZenMvvm.TestAssembly", "src\ZenMvvm.TestAssembly\ZenMvvm.TestAssembly.csproj", "{487A5002-1A54-4EEB-A851-3B819F981CA1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZenMvvm.Core.TestAssembly", "src\ZenMvvm.Core.TestAssembly\ZenMvvm.Core.TestAssembly.csproj", "{487A5002-1A54-4EEB-A851-3B819F981CA1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZenMvvm.Tests", "src\ZenMvvm.Tests\ZenMvvm.Tests.csproj", "{3BCBB473-4EAE-45E6-9977-6C0925246B20}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZenMvvm.Core.Tests", "src\ZenMvvm.Core.Tests\ZenMvvm.Core.Tests.csproj", "{3BCBB473-4EAE-45E6-9977-6C0925246B20}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
