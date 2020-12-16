@@ -21,7 +21,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.8.3" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ZenMvvm.Core\ZenMvvm.Core.csproj" />
-    <ProjectReference Include="..\ZenMvvm.Core.TestAssembly\ZenMvvm.Core.TestAssembly.csproj" />
+    <ProjectReference Include="..\ZenMvvm\ZenMvvm.csproj" />
+    <ProjectReference Include="..\ZenMvvm.TestAssembly\ZenMvvm.TestAssembly.csproj" />
   </ItemGroup>  
 </Project>

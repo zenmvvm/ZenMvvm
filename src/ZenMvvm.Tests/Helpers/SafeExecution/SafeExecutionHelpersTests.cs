@@ -9,20 +9,8 @@ using Xamarin.Forms.Mocks;
 namespace ZenMvvm.Tests
 {
     [Collection("SafeTests")]
-    public class SafeExecutionHelpersTests : IDisposable
+    public class SafeExecutionHelpersTests
     {
-        //todo clean up tests to rely on ctor/dispose for setup/teardown
-        public SafeExecutionHelpersTests()
-        {
-            BeforeEachTest();
-        }
-
-        public void Dispose()
-        {
-            AfterEachTest();
-            GC.SuppressFinalize(this);
-        }
-
         protected const int Delay = 50;
         //protected WeakEventManager TestWeakEventManager { get; } = new WeakEventManager();
         //protected WeakEventManager<string> TestStringWeakEventManager { get; } = new WeakEventManager<string>();
@@ -59,14 +47,12 @@ namespace ZenMvvm.Tests
         #region Setup/TearDown
         private void BeforeEachTest()
         {
-            SafeExecutionHelpers.RevertToDefaultImplementation();
             SafeExecutionHelpers.Configure(s => s.ShouldAlwaysRethrowException = false);
             SafeExecutionHelpers.RemoveDefaultExceptionHandler();
         }
 
         private void AfterEachTest()
         {
-            SafeExecutionHelpers.RevertToDefaultImplementation();
             SafeExecutionHelpers.Configure(s => s.ShouldAlwaysRethrowException = false);
             SafeExecutionHelpers.RemoveDefaultExceptionHandler();
         }
@@ -175,11 +161,9 @@ namespace ZenMvvm.Tests
         [Fact]
         public void HandleException_SpecificException_TargetThrowsSpecificException_IsHandledByGivenDelegate()
         {
-            BeforeEachTest();
             bool isHandled = false;
             SafeExecutionHelpers.HandleException<SpecificException>(new SpecificException(), (ex) => isHandled = true);
             Assert.True(isHandled);
-            AfterEachTest();
         }
 
 
@@ -309,7 +293,7 @@ namespace ZenMvvm.Tests
         {
             SafeExecutionHelpers.RevertToDefaultImplementation();
             SafeExecutionHelpers.RemoveDefaultExceptionHandler();
-            MockForms.Init(); //For Device.BeginInvokeOnMainThread
+
             var exception = new Exception();
             var handler = new Mock<Action<SpecificException>>();
 
@@ -398,7 +382,6 @@ namespace ZenMvvm.Tests
         [Fact]
         public void HandleException_ShouldRethrow_Throws()
         {
-            SafeExecutionHelpers.RevertToDefaultImplementation();
             MockForms.Init(); //For Device.BeginInvokeOnMainThread
             SafeExecutionHelpers.Configure(s => s.ShouldAlwaysRethrowException = true);
             SafeExecutionHelpers.RemoveDefaultExceptionHandler();

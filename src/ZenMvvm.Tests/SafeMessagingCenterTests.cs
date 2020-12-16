@@ -6,7 +6,7 @@ using Xunit;
 
 namespace ZenMvvm.Tests
 {
-    [Collection("SafeTests")]
+
     public class SafeMessagingCenterTests
     {
         TestSubcriber _subscriber;
