@@ -115,7 +115,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Download Artifact
-      uses: actions/download-artifact@v2.0.8
+      uses: actions/download-artifact@v2.1.0
       with:
         name: nupkg
         path: nupkg
@@ -149,7 +149,7 @@ jobs:
         with:
           ref: develop
       - name: Download Coverage Artifact
-        uses: actions/download-artifact@v2.0.8
+        uses: actions/download-artifact@v2.1.0
         with:
           name: cov
           path: cov
