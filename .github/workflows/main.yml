@@ -95,7 +95,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: automerge
-        uses: actions/github-script@v3.1
+        uses: actions/github-script@v5.1.0
         with:
           script: |
             const pullRequest = context.payload.pull_request
