@@ -58,7 +58,7 @@ jobs:
           reportgenerator "-reports:./**/coverage.cobertura.xml" "-targetdir:./coverage" "-reporttypes:Badges;HtmlInline"
       - name: Upload Code Coverage Report Artifact if Run
         if: matrix.os == 'ubuntu-latest' && (github.ref == 'refs/heads/develop' || github.event_name == 'release')
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: cov
           path: ./coverage/*.*                    
@@ -72,7 +72,7 @@ jobs:
         run: dotnet pack -v normal -c Release --no-restore --include-symbols --include-source -p:PackageVersion=$NIGHTLY_PACKAGE_VERSION src/$PROJECT_NAME/$PROJECT_NAME.*proj
       - name: Upload Nupkg Artifact
         if: matrix.os == 'ubuntu-latest'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: nupkg
           path: ./src/${{ env.PROJECT_NAME }}/bin/Release/*.nupkg
